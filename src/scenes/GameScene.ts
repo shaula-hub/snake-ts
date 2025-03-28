@@ -117,6 +117,7 @@ export default class GameScene extends Phaser.Scene {
     const boardX = (width - boardWidth) / 2;
     const boardY = height * 0.2;
 
+    //========== 1. Set up the game world and physics
     // Create game board
     // this.gameBoard = this.add
     //   .rectangle(
@@ -214,11 +215,7 @@ export default class GameScene extends Phaser.Scene {
       )
       .setOrigin(0.5);
 
-    // Set up keyboard controls
-    // this.input.keyboard.on('keydown-UP', () => {
-    //   if (this.direction !== "DOWN") this.nextDirection = "UP";
-    // });
-
+    //========== 2. Set up keyboard controls
     if (this.input && this.input.keyboard) {
       this.input.keyboard.on("keydown-UP", () => {
         if (this.direction !== "DOWN") this.nextDirection = "UP";
@@ -256,13 +253,28 @@ export default class GameScene extends Phaser.Scene {
         loop: true,
       });
 
-      // Add mobile controls if on mobile device
-      if (this.sys.game.device.input.touch) {
+      //========== 3. Mobiles processing
+      const isMobile =
+        !this.sys.game.device.os.desktop ||
+        // Don't use input.touch directly as it's causing an error
+        this.sys.game.device.input.touch ||
+        window.innerWidth < 800;
+
+      if (isMobile) {
+        // Add mobile indicator
+        const mobileIcon = this.add
+          .text(10, 10, "📱", {
+            fontSize: "24px",
+          })
+          .setOrigin(0, 0);
+
+        // Set up mobile controls (this will add the directional buttons)
         this.setupMobileControls();
       }
-    }
-  }
+    } // (this.input && this.input.keyboard
+  } // create()
 
+  //========== 3. Set up mobile controls
   private setupMobileControls(): void {
     // Create a larger swipe area over the entire game
     const swipeArea = this.add
@@ -270,43 +282,177 @@ export default class GameScene extends Phaser.Scene {
       .setOrigin(0)
       .setInteractive();
 
+    // Swipe logic (assuming you already have this)
     let startX = 0;
     let startY = 0;
-
-    swipeArea.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+    swipeArea.on("pointerdown", (pointer) => {
       startX = pointer.x;
       startY = pointer.y;
     });
 
-    swipeArea.on("pointerup", (pointer: Phaser.Input.Pointer) => {
-      const dx = pointer.x - startX;
-      const dy = pointer.y - startY;
+    swipeArea.on("pointerup", (pointer) => {
+      const swipeX = pointer.x - startX;
+      const swipeY = pointer.y - startY;
+      const swipeThreshold = 50;
 
-      // If it's a tap (small movement), boost speed temporarily
-      if (Math.abs(dx) < 20 && Math.abs(dy) < 20) {
-        this.boostSpeed();
-        return;
-      }
-
-      // Determine swipe direction
-      if (Math.abs(dx) > Math.abs(dy)) {
+      // Determine direction based on the stronger swipe component
+      if (Math.abs(swipeX) > Math.abs(swipeY)) {
         // Horizontal swipe
-        if (dx > 0 && this.direction !== "LEFT") {
-          this.nextDirection = "RIGHT";
-        } else if (dx < 0 && this.direction !== "RIGHT") {
-          this.nextDirection = "LEFT";
+        if (swipeX > swipeThreshold) {
+          if (this.direction !== "LEFT") this.nextDirection = "RIGHT";
+        } else if (swipeX < -swipeThreshold) {
+          if (this.direction !== "RIGHT") this.nextDirection = "LEFT";
         }
       } else {
         // Vertical swipe
-        if (dy > 0 && this.direction !== "UP") {
-          this.nextDirection = "DOWN";
-        } else if (dy < 0 && this.direction !== "DOWN") {
-          this.nextDirection = "UP";
+        if (swipeY > swipeThreshold) {
+          if (this.direction !== "UP") this.nextDirection = "DOWN";
+        } else if (swipeY < -swipeThreshold) {
+          if (this.direction !== "DOWN") this.nextDirection = "UP";
         }
       }
     });
+
+    // Setup directional buttons
+    this.setupMobileButtons();
   }
 
+  private setupMobileButtons(): void {
+    const { width, height } = this.scale;
+    const buttonSize = 70; // Slightly larger for better touch targets
+    const padding = 10;
+
+    // Position the controls at bottom right for better thumb access
+    const centerX = width - buttonSize * 1.5;
+    const centerY = height - buttonSize * 1.5;
+
+    // Create a container for all button elements
+    const buttonGroup = this.add.group();
+
+    // Create background for the controls
+    const controlsBg = this.add.circle(
+      centerX,
+      centerY,
+      buttonSize * 2,
+      0x000000,
+      0.15
+    );
+    buttonGroup.add(controlsBg);
+
+    // UP button
+    const upButton = this.add
+      .rectangle(
+        centerX,
+        centerY - buttonSize - padding,
+        buttonSize,
+        buttonSize,
+        0x00ff00,
+        0.5
+      )
+      .setInteractive({ useHandCursor: true })
+      .setOrigin(0.5)
+      .on("pointerdown", () => {
+        if (this.direction !== "DOWN") this.nextDirection = "UP";
+      });
+    const upText = this.add
+      .text(centerX, centerY - buttonSize - padding, "↑", {
+        fontSize: "32px",
+        color: COLORS.WHITE,
+      })
+      .setOrigin(0.5);
+    buttonGroup.add(upButton);
+    buttonGroup.add(upText);
+
+    // DOWN button
+    const downButton = this.add
+      .rectangle(
+        centerX,
+        centerY + buttonSize + padding,
+        buttonSize,
+        buttonSize,
+        0x00ff00,
+        0.5
+      )
+      .setInteractive({ useHandCursor: true })
+      .setOrigin(0.5)
+      .on("pointerdown", () => {
+        if (this.direction !== "UP") this.nextDirection = "DOWN";
+      });
+    const downText = this.add
+      .text(centerX, centerY + buttonSize + padding, "↓", {
+        fontSize: "32px",
+        color: COLORS.WHITE,
+      })
+      .setOrigin(0.5);
+    buttonGroup.add(downButton);
+    buttonGroup.add(downText);
+
+    // LEFT button
+    const leftButton = this.add
+      .rectangle(
+        centerX - buttonSize - padding,
+        centerY,
+        buttonSize,
+        buttonSize,
+        0x00ff00,
+        0.5
+      )
+      .setInteractive({ useHandCursor: true })
+      .setOrigin(0.5)
+      .on("pointerdown", () => {
+        if (this.direction !== "RIGHT") this.nextDirection = "LEFT";
+      });
+    const leftText = this.add
+      .text(centerX - buttonSize - padding, centerY, "←", {
+        fontSize: "32px",
+        color: COLORS.WHITE,
+      })
+      .setOrigin(0.5);
+    buttonGroup.add(leftButton);
+    buttonGroup.add(leftText);
+
+    // RIGHT button
+    const rightButton = this.add
+      .rectangle(
+        centerX + buttonSize + padding,
+        centerY,
+        buttonSize,
+        buttonSize,
+        0x00ff00,
+        0.5
+      )
+      .setInteractive({ useHandCursor: true })
+      .setOrigin(0.5)
+      .on("pointerdown", () => {
+        if (this.direction !== "LEFT") this.nextDirection = "RIGHT";
+      });
+    const rightText = this.add
+      .text(centerX + buttonSize + padding, centerY, "→", {
+        fontSize: "32px",
+        color: COLORS.WHITE,
+      })
+      .setOrigin(0.5);
+    buttonGroup.add(rightButton);
+    buttonGroup.add(rightText);
+
+    // Add visual feedback on press for each button
+    [upButton, downButton, leftButton, rightButton].forEach((button) => {
+      button.on("pointerdown", () => {
+        button.setFillStyle(0x00aa00, 0.7); // Darker green when pressed
+      });
+      button.on("pointerup", () => {
+        button.setFillStyle(0x00ff00, 0.5); // Back to normal
+      });
+      button.on("pointerout", () => {
+        button.setFillStyle(0x00ff00, 0.5); // Back to normal if pointer moves out
+      });
+    });
+
+    // Make directional buttons semi-transparent to not block game view
+    buttonGroup.setAlpha(0.8);
+  } //  Mobile controls
+
+  //========= Speed, timer
   private boostSpeed(): void {
     // Store original speed
     const originalSpeed = this.speed;
