@@ -4,13 +4,15 @@ import GameScene from "./scenes/GameScene";
 import PauseScene from "./scenes/PauseScene";
 import GameOverScene from "./scenes/GameOverScene";
 
-const config: Phaser.Types.Core.GameConfig = {
+const config = {
   type: Phaser.AUTO,
-  width: 800,
-  height: 700,
-  parent: "game",
-  backgroundColor: "#000000",
-  scene: [MainMenuScene, GameScene, PauseScene, GameOverScene],
+  scale: {
+    mode: Phaser.Scale.RESIZE, // Use RESIZE instead of FIT for better adaptivity
+    parent: "game-container", // Make sure this div exists in your HTML
+    width: "100%",
+    height: "100%",
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+  },
   physics: {
     default: "arcade",
     arcade: {
@@ -18,6 +20,7 @@ const config: Phaser.Types.Core.GameConfig = {
       debug: false,
     },
   },
+  scene: [GameScene], // Your game scenes
 };
 
 new Phaser.Game(config);

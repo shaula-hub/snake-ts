@@ -4,11 +4,15 @@ import { COLORS } from "./constants";
 
 export default class GameScene extends Phaser.Scene {
   // Constants
-  private readonly GRID_SIZE = 25;
-  private readonly CELL_SIZE = 20;
   private readonly MIN_SPEED = 80;
   private readonly MAX_SPEED = 500;
   private readonly DEFAULT_SPEED = 180;
+  private readonly GRID_SIZE = 25;
+  private readonly CELL_SIZE = 20;
+
+  private cellSize = 20;
+
+  private isMobile: boolean = false;
 
   // Snake food constants
   private readonly SNAKE_FOOD = [
@@ -254,13 +258,13 @@ export default class GameScene extends Phaser.Scene {
       });
 
       //========== 3. Mobiles processing
-      const isMobile =
+      this.isMobile =
         !this.sys.game.device.os.desktop ||
         // Don't use input.touch directly as it's causing an error
         this.sys.game.device.input.touch ||
         window.innerWidth < 800;
 
-      if (isMobile) {
+      if (this.isMobile) {
         // Add mobile indicator
         const mobileIcon = this.add
           .text(10, 10, "📱", {
@@ -452,6 +456,58 @@ export default class GameScene extends Phaser.Scene {
     buttonGroup.setAlpha(0.8);
   } //  Mobile controls
 
+  //========= Resizing
+  private resize(): void {
+    const { width, height } = this.scale;
+
+    // Calculate responsive grid size
+    this.cellSize = Math.floor(Math.min(width / 30, height / 30));
+
+    const boardWidth = this.GRID_SIZE * this.cellSize;
+    const boardHeight = this.GRID_SIZE * this.cellSize;
+
+    // Recalculate board position to center it
+    const boardX = (width - boardWidth) / 2;
+    const boardY = height * 0.2; // Keep at 20% from top
+
+    // Update game board size and position
+    if (this.gameBoard) {
+      this.gameBoard.setPosition(
+        boardX + boardWidth / 2,
+        boardY + boardHeight / 2
+      );
+      this.gameBoard.setDisplaySize(boardWidth, boardHeight);
+    }
+
+    // Resize UI elements with responsive font
+    const titleSize = Math.max(24, Math.floor(width / 25)) + "px";
+    const textSize = Math.max(16, Math.floor(width / 35)) + "px";
+
+    if (this.titleText) {
+      this.titleText.setFontSize(titleSize);
+      this.titleText.setPosition(width / 2, boardY - 60);
+    }
+
+    if (this.scoreText) {
+      this.scoreText.setFontSize(textSize);
+      this.scoreText.setPosition(width * 0.75, boardY - 30);
+    }
+
+    if (this.speedText) {
+      this.speedText.setFontSize(textSize);
+      this.speedText.setPosition(width * 0.25, boardY - 30);
+    }
+
+    // Update snake and food positions
+    this.updateSnakeGraphics();
+
+    // Update mobile controls if present
+    if (this.isMobile) {
+      // Clear and recreate mobile controls
+      this.setupMobileButtons();
+    }
+  }
+
   //========= Speed, timer
   private boostSpeed(): void {
     // Store original speed
@@ -553,13 +609,13 @@ export default class GameScene extends Phaser.Scene {
     }
 
     // Create food graphic
-    const boardX = (this.scale.width - this.GRID_SIZE * this.CELL_SIZE) / 2;
+    const boardX = (this.scale.width - this.GRID_SIZE * this.cellSize) / 2;
     const boardY = this.scale.height * 0.2;
 
     const foodGraphic = this.add
       .text(
-        boardX + this.food.x * this.CELL_SIZE + this.CELL_SIZE / 2,
-        boardY + this.food.y * this.CELL_SIZE + this.CELL_SIZE / 2,
+        boardX + this.food.x * this.cellSize + this.cellSize / 2,
+        boardY + this.food.y * this.cellSize + this.cellSize / 2,
         this.food.emoji,
         { fontSize: "20px" }
       )
@@ -678,7 +734,7 @@ export default class GameScene extends Phaser.Scene {
 
     // Create food items array and graphics
     this.foodItems = [];
-    const boardX = (this.scale.width - this.GRID_SIZE * this.CELL_SIZE) / 2;
+    const boardX = (this.scale.width - this.GRID_SIZE * this.cellSize) / 2;
     const boardY = this.scale.height * 0.2;
 
     for (let y = 0; y < rotatedShape.length; y++) {
@@ -698,8 +754,8 @@ export default class GameScene extends Phaser.Scene {
           // Create food graphic
           const foodGraphic = this.add
             .text(
-              boardX + foodX * this.CELL_SIZE + this.CELL_SIZE / 2,
-              boardY + foodY * this.CELL_SIZE + this.CELL_SIZE / 2,
+              boardX + foodX * this.cellSize + this.cellSize / 2,
+              boardY + foodY * this.cellSize + this.cellSize / 2,
               foodEmoji,
               { fontSize: "20px" }
             )
@@ -846,16 +902,16 @@ export default class GameScene extends Phaser.Scene {
   }
 
   private createExplosionEffect(x: number, y: number): void {
-    const boardX = (this.scale.width - this.GRID_SIZE * this.CELL_SIZE) / 2;
+    const boardX = (this.scale.width - this.GRID_SIZE * this.cellSize) / 2;
     const boardY = this.scale.height * 0.2;
-    const centerX = boardX + x * this.CELL_SIZE + this.CELL_SIZE / 2;
-    const centerY = boardY + y * this.CELL_SIZE + this.CELL_SIZE / 2;
+    const centerX = boardX + x * this.cellSize + this.cellSize / 2;
+    const centerY = boardY + y * this.cellSize + this.cellSize / 2;
 
     // Create explosion center
     const explosion = this.add.circle(
       centerX,
       centerY,
-      this.CELL_SIZE / 2,
+      this.cellSize / 2,
       0xff4500
     );
 
@@ -883,13 +939,13 @@ export default class GameScene extends Phaser.Scene {
     // Animate rays
     rays.forEach((ray, i) => {
       const angle = (i / rayCount) * Math.PI * 2;
-      const distance = this.CELL_SIZE * 3;
+      const distance = this.cellSize * 3;
 
       this.tweens.add({
         targets: ray,
         x: centerX + Math.cos(angle) * distance,
         y: centerY + Math.sin(angle) * distance,
-        height: this.CELL_SIZE * 1.5,
+        height: this.cellSize * 1.5,
         alpha: 0,
         duration: 1500,
         ease: "Power2",
@@ -905,14 +961,14 @@ export default class GameScene extends Phaser.Scene {
   }
 
   private updateSnakeGraphics(): void {
-    const boardX = (this.scale.width - this.GRID_SIZE * this.CELL_SIZE) / 2;
+    const boardX = (this.scale.width - this.GRID_SIZE * this.cellSize) / 2;
     const boardY = this.scale.height * 0.2;
 
     // Update snake head texture and position
     this.snakeHead.setTexture(this.SNAKE_HEADS[this.direction]);
     this.snakeHead.setPosition(
-      boardX + this.snake[0].x * this.CELL_SIZE + this.CELL_SIZE / 2,
-      boardY + this.snake[0].y * this.CELL_SIZE + this.CELL_SIZE / 2
+      boardX + this.snake[0].x * this.cellSize + this.cellSize / 2,
+      boardY + this.snake[0].y * this.cellSize + this.cellSize / 2
     );
     this.snakeHead.setScale(0.5);
 
@@ -932,8 +988,8 @@ export default class GameScene extends Phaser.Scene {
       // Default to horizontal body segment
       const segment = this.add
         .image(
-          boardX + this.snake[i].x * this.CELL_SIZE + this.CELL_SIZE / 2,
-          boardY + this.snake[i].y * this.CELL_SIZE + this.CELL_SIZE / 2,
+          boardX + this.snake[i].x * this.cellSize + this.cellSize / 2,
+          boardY + this.snake[i].y * this.cellSize + this.cellSize / 2,
           "body_horizontal"
         )
         .setOrigin(0.5)
@@ -953,12 +1009,8 @@ export default class GameScene extends Phaser.Scene {
 
       // Update position
       this.snakeBody[i].setPosition(
-        boardX +
-          this.snake[segmentIndex].x * this.CELL_SIZE +
-          this.CELL_SIZE / 2,
-        boardY +
-          this.snake[segmentIndex].y * this.CELL_SIZE +
-          this.CELL_SIZE / 2
+        boardX + this.snake[segmentIndex].x * this.cellSize + this.cellSize / 2,
+        boardY + this.snake[segmentIndex].y * this.cellSize + this.cellSize / 2
       );
     }
 
