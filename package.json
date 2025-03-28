@@ -1,0 +1,25 @@
+{
+  "name": "snake-ts",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "phaser": "^3.88.2"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.2"
+  },
+  "description": ""
+}
