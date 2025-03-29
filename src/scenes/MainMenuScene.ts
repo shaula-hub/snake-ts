@@ -104,40 +104,29 @@ export default class MainMenuScene extends Phaser.Scene {
       .on("pointerout", this.onButtonOut, this)
       .on("pointerdown", this.startGame, this);
 
-    // this.startButton = this.add
-    //   .text(width / 2, (height * 3) / 4, "Start Game", {
+    // // Controls instructions
+    // this.add
+    //   .text(width / 2, height * 0.7, "Controls:", {
     //     fontFamily: "Arial",
-    //     fontSize: "32px",
-    //     color: "#ffffff",
-    //     backgroundColor: "#22c55e",
-    //     padding: { x: 20, y: 10 },
-    //     borderRadius: 25, // Add rounded corners
+    //     fontSize: "40px",
+    //     // fontStyle: "bold",
+    //     color: COLORS.HIGHLIGHT,
     //   })
     //   .setOrigin(0.5);
 
-    // Controls instructions
-    this.add
-      .text(width / 2, height * 0.7, "Controls:", {
-        fontFamily: "Arial",
-        fontSize: "40px",
-        // fontStyle: "bold",
-        color: COLORS.HIGHLIGHT,
-      })
-      .setOrigin(0.5);
+    // const isMobile = this.sys.game.device.input.touch;
+    // const controlsText = isMobile
+    //   ? "\nSwipe to change direction"
+    //   : "\nArrow Keys: Move\n+/-: Speed\nESC: Pause";
 
-    const isMobile = this.sys.game.device.input.touch;
-    const controlsText = isMobile
-      ? "\nSwipe to change direction"
-      : "\nArrow Keys: Move\n+/-: Speed\nESC: Pause";
-
-    this.instructions = this.add
-      .text(width / 2, height * 0.8, controlsText, {
-        fontFamily: "Arial",
-        fontSize: "26px",
-        color: COLORS.WHITE,
-        align: "center",
-      })
-      .setOrigin(0.5);
+    // this.instructions = this.add
+    //   .text(width / 2, height * 0.8, controlsText, {
+    //     fontFamily: "Arial",
+    //     fontSize: "26px",
+    //     color: COLORS.WHITE,
+    //     align: "center",
+    //   })
+    //   .setOrigin(0.5);
 
     if (this.input && this.input.keyboard) {
       this.input.keyboard.on("keydown-UP", () => {
