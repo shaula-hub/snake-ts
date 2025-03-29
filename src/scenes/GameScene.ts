@@ -90,6 +90,7 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("tail_right", "images/tail_right.png");
 
     this.load.image("game-background", "images/game-background.jpg");
+    // this.load.image("background", "images/background.jpg");
   }
 
   private readonly SNAKE_HEADS = {
@@ -135,6 +136,12 @@ export default class GameScene extends Phaser.Scene {
     //   )
     //   .setStrokeStyle(4, 0x1f2937);
 
+    // Add full screen background first (lowest layer)
+    // const fullScreenBg = this.add
+    //   .image(width / 2, height / 2, "background")
+    //   .setDisplaySize(width, height);
+    //.setDepth(-10);
+
     // Replace the plain rectangle with an image
     this.gameBoard = this.add
       .image(
@@ -143,6 +150,7 @@ export default class GameScene extends Phaser.Scene {
         "game-background"
       )
       .setDisplaySize(boardWidth, boardHeight);
+    //.setDepth(1);
 
     // Add a border if needed
     const border = this.add
@@ -719,6 +727,7 @@ export default class GameScene extends Phaser.Scene {
         { fontSize: "20px" }
       )
       .setOrigin(0.5);
+    //.setDepth(10);
 
     this.foodGraphics.push(foodGraphic);
   }
@@ -1093,6 +1102,7 @@ export default class GameScene extends Phaser.Scene {
         )
         .setOrigin(0.5)
         .setScale(0.5);
+      //.setDepth(10);
 
       this.snakeBody.push(segment);
       snakeChanged = true;
