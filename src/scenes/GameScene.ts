@@ -544,7 +544,7 @@ export default class GameScene extends Phaser.Scene {
     const { width, height } = this.scale;
 
     // Calculate responsive grid size
-    this.cellSize = Math.floor(Math.min(width / 45, height / 45) * 1.0);
+    this.cellSize = Math.floor(Math.min(width / 100, height / 100) * 1.0);
     //this.cellSize = Math.floor(Math.min(width / 25, height / 25) * 0.95);
 
     const boardWidth = this.GRID_SIZE * this.cellSize;
