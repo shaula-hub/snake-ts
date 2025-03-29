@@ -59,6 +59,8 @@ export default class GameScene extends Phaser.Scene {
   private snakeBody: Phaser.GameObjects.Image[] = [];
 
   private foodGraphics: Phaser.GameObjects.Text[] = [];
+  private speedDownBtn!: Phaser.GameObjects.Text;
+  private speedUpBtn!: Phaser.GameObjects.Text;
 
   constructor() {
     super("GameScene");
@@ -156,46 +158,119 @@ export default class GameScene extends Phaser.Scene {
     // Add title
     this.titleText = this.add
       .text(
-        width / 2,
-        boardY - 60,
+        width * 0.5,
+        height * 0.1,
         `SNAKE ${
           this.gameType.charAt(0).toUpperCase() + this.gameType.slice(1)
         }`,
-        {
-          fontFamily: "Arial",
-          fontSize: "32px",
-          color: COLORS.WHITE,
-        }
+        { fontFamily: "Arial", fontSize: "48px", color: COLORS.WHITE }
       )
       .setOrigin(0.5);
+    // .text(
+    //   width / 2,
+    //   boardY - 60,
+    //   `SNAKE ${
+    //     this.gameType.charAt(0).toUpperCase() + this.gameType.slice(1)
+    //   }`,
+    //   {
+    //     fontFamily: "Arial",
+    //     fontSize: "32px",
+    //     color: COLORS.WHITE,
+    //   }
+    // )
+    //.setOrigin(0.5);
 
     // Add UI elements
     this.scoreText = this.add
-      .text(width * 0.75, boardY - 30, `Score: ${this.score}`, {
+      .text(width * 0.5, height * 0.15, `Score: ${this.score}`, {
         fontFamily: "Arial",
         fontSize: "20px",
         color: COLORS.NORMAL,
       })
       .setOrigin(0.5);
+    // .text(width * 0.75, boardY - 30, `Score: ${this.score}`, {
+    //   fontFamily: "Arial",
+    //   fontSize: "20px",
+    //   color: COLORS.NORMAL,
+    // })
+    // .setOrigin(0.5);
 
+    // Delay text aligned left
     this.speedText = this.add
-      .text(width * 0.25, boardY - 30, `Delay (+ -): ${this.speed}ms`, {
+      .text(boardX, height * 0.15, `Delay: `, {
         fontFamily: "Arial",
         fontSize: "20px",
         color: COLORS.WHITE,
       })
-      .setOrigin(0.5);
+      .setOrigin(0, 0.5);
+
+    const textWidth = this.speedText.width;
+
+    // Speed down button
+    this.speedDownBtn = this.add
+      .text(
+        boardX + textWidth + width * 0.01, // Small gap after "Delay:"
+        height * 0.15,
+        "◀",
+        {
+          fontFamily: "Arial",
+          fontSize: "20px",
+          backgroundColor: COLORS.BUTTON_BG,
+          padding: { x: 6, y: 4 },
+        }
+      )
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true })
+      .on("pointerdown", () => this.changeSpeed(-20));
+
+    // Speed value
+    const speedValueText = this.add
+      .text(
+        boardX + textWidth + width * 0.05, // Space between button and value
+        height * 0.15,
+        `${this.speed}ms`,
+        { fontFamily: "Arial", fontSize: "20px", color: COLORS.WHITE }
+      )
+      .setOrigin(0.5)
+      .setName("speedValueText");
+
+    // Speed up button
+    this.speedUpBtn = this.add
+      .text(
+        boardX + textWidth + width * 0.09, // Space after value
+        height * 0.15,
+        "▶",
+        {
+          fontFamily: "Arial",
+          fontSize: "20px",
+          backgroundColor: COLORS.BUTTON_BG,
+          padding: { x: 6, y: 4 },
+        }
+      )
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true })
+      .on("pointerdown", () => this.changeSpeed(+20));
 
     // Set up pause button text
     const pauseButton = this.add
-      .text(width - 80, 60, "Pause", {
+      .text(boardX + boardWidth, height * 0.15, "Pause", {
         fontFamily: "Arial",
-        fontSize: "16px",
+        fontSize: "20px",
         color: COLORS.NORMAL,
         backgroundColor: COLORS.BUTTON_BG,
         padding: { x: 10, y: 5 },
       })
-      .setOrigin(0.5);
+      .setOrigin(1, 0.5)
+      .setInteractive({ useHandCursor: true })
+      .on("pointerdown", () => this.togglePause());
+    // .text(width - 80, 60, "Pause", {
+    //     fontFamily: "Arial",
+    //     fontSize: "16px",
+    //     color: COLORS.NORMAL,
+    //     backgroundColor: COLORS.BUTTON_BG,
+    //     padding: { x: 10, y: 5 },
+    //   })
+    //   .setOrigin(0.5);
 
     pauseButton
       .setInteractive({ useHandCursor: true })
@@ -256,10 +331,6 @@ export default class GameScene extends Phaser.Scene {
         callbackScope: this,
         loop: true,
       });
-
-      // RESIZE HANDLER
-      this.scale.on("resize", this.resize, this);
-      this.resize();
 
       //========== 3. Mobiles processing
       this.isMobile =
@@ -327,7 +398,7 @@ export default class GameScene extends Phaser.Scene {
 
   private setupMobileButtons(): void {
     const { width, height } = this.scale;
-    const buttonSize = 40; // Slightly larger for better touch targets
+    const buttonSize = 70; // Slightly larger for better touch targets
     const padding = 5;
 
     // Position the controls at bottom right for better thumb access
@@ -465,51 +536,69 @@ export default class GameScene extends Phaser.Scene {
     const { width, height } = this.scale;
 
     // Calculate responsive grid size
-    this.cellSize = Math.floor(Math.min(width / 30, height / 30) * 0.95);
+    this.cellSize = Math.floor(Math.min(width / 25, height / 25) * 0.95);
 
     const boardWidth = this.GRID_SIZE * this.cellSize;
     const boardHeight = this.GRID_SIZE * this.cellSize;
-
-    // Recalculate board position to center it
     const boardX = (width - boardWidth) / 2;
-    const boardY = height * 0.2; // Keep at 20% from top
+    const boardY = height * 0.2;
 
-    // Update game board size and position
+    // Update board and positions
     if (this.gameBoard) {
-      this.gameBoard.setPosition(
-        boardX + boardWidth / 2,
-        boardY + boardHeight / 2
-      );
+      this.gameBoard.setPosition(width * 0.5, boardY + boardHeight * 0.5);
       this.gameBoard.setDisplaySize(boardWidth, boardHeight);
     }
 
-    // Resize UI elements with responsive font
-    const titleSize = Math.max(24, Math.floor(width / 25)) + "px";
-    const textSize = Math.max(16, Math.floor(width / 35)) + "px";
+    //   this.gameBoard.setPosition(
+    //     boardX + boardWidth / 2,
+    //     boardY + boardHeight / 2
+    //   );
+    //   this.gameBoard.setDisplaySize(boardWidth, boardHeight);
+    // }
 
+    // Resize UI elements with percentage-based positioning
     if (this.titleText) {
-      this.titleText.setFontSize(titleSize);
-      this.titleText.setPosition(width / 2, boardY - 60);
-    }
-
-    if (this.scoreText) {
-      this.scoreText.setFontSize(textSize);
-      this.scoreText.setPosition(width * 0.75, boardY - 30);
+      this.titleText.setPosition(width * 0.5, height * 0.1);
+      this.titleText.setFontSize(Math.max(24, Math.floor(width / 25)));
     }
 
     if (this.speedText) {
-      this.speedText.setFontSize(textSize);
-      this.speedText.setPosition(width * 0.25, boardY - 30);
+      this.speedText.setPosition(boardX, height * 0.15);
+      this.speedText.setFontSize(Math.max(16, Math.floor(width / 35)));
+      const textWidth = this.speedText.width;
+
+      if (this.speedDownBtn) {
+        this.speedDownBtn.setPosition(
+          boardX + textWidth + width * 0.01,
+          height * 0.15
+        );
+      }
+
+      const speedValueText = this.children.getByName(
+        "speedValueText"
+      ) as Phaser.GameObjects.Text;
+      if (speedValueText) {
+        speedValueText.setPosition(
+          boardX + textWidth + width * 0.05,
+          height * 0.15
+        );
+      }
+
+      if (this.speedUpBtn) {
+        this.speedUpBtn.setPosition(
+          boardX + textWidth + width * 0.09,
+          height * 0.15
+        );
+      }
+    }
+
+    if (this.scoreText) {
+      this.scoreText.setPosition(width * 0.5, height * 0.15);
+      this.scoreText.setFontSize(Math.max(16, Math.floor(width / 35)));
     }
 
     // Update snake and food positions
     this.updateSnakeGraphics();
-
-    // Update mobile controls if present
-    if (this.isMobile) {
-      // Clear and recreate mobile controls
-      this.setupMobileButtons();
-    }
   }
 
   //========= Speed, timer
@@ -572,7 +661,12 @@ export default class GameScene extends Phaser.Scene {
 
   private updateSpeedText(): void {
     const roundedSpeed = Math.round(this.speed);
-    this.speedText.setText(`Delay (+ -): ${roundedSpeed}ms`);
+    const speedValueText = this.children.getByName(
+      "speedValueText"
+    ) as Phaser.GameObjects.Text;
+    if (speedValueText) {
+      speedValueText.setText(`${roundedSpeed}ms`);
+    }
   }
 
   private togglePause(): void {
