@@ -257,6 +257,10 @@ export default class GameScene extends Phaser.Scene {
         loop: true,
       });
 
+      // RESIZE HANDLER
+      this.scale.on("resize", this.resize, this);
+      this.resize();
+
       //========== 3. Mobiles processing
       this.isMobile =
         !this.sys.game.device.os.desktop ||
@@ -324,7 +328,7 @@ export default class GameScene extends Phaser.Scene {
   private setupMobileButtons(): void {
     const { width, height } = this.scale;
     const buttonSize = 70; // Slightly larger for better touch targets
-    const padding = 10;
+    const padding = 5;
 
     // Position the controls at bottom right for better thumb access
     const centerX = width - buttonSize * 1.5;
@@ -461,7 +465,7 @@ export default class GameScene extends Phaser.Scene {
     const { width, height } = this.scale;
 
     // Calculate responsive grid size
-    this.cellSize = Math.floor(Math.min(width / 30, height / 30));
+    this.cellSize = Math.floor(Math.min(width / 30, height / 30) * 0.95);
 
     const boardWidth = this.GRID_SIZE * this.cellSize;
     const boardHeight = this.GRID_SIZE * this.cellSize;
