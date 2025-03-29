@@ -10,6 +10,14 @@ export default class GameScene extends Phaser.Scene {
   private readonly GRID_SIZE = 25;
   private readonly CELL_SIZE = 20;
 
+  private windowSize = {
+    width: typeof window !== "undefined" ? window.innerWidth : 800,
+    height: typeof window !== "undefined" ? window.innerHeight : 600,
+  };
+  private containerScale: number = 1;
+  private readonly CONTAINER_WIDTH = 600; // Base width for the game container
+  private readonly CONTAINER_HEIGHT = 800; // Base height for the game container
+
   private cellSize = 20;
 
   private isMobile: boolean = false;
@@ -115,6 +123,13 @@ export default class GameScene extends Phaser.Scene {
     const directions = ["UP", "DOWN", "LEFT", "RIGHT"];
     this.direction = directions[Math.floor(Math.random() * directions.length)];
     this.nextDirection = this.direction;
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("resize", () => {
+        // This will trigger the resize method via Phaser's scale manager
+        this.scale.resize(window.innerWidth, window.innerHeight);
+      });
+    }
   }
 
   create() {
@@ -125,24 +140,9 @@ export default class GameScene extends Phaser.Scene {
     const boardY = height * 0.2;
 
     //========== 1. Set up the game world and physics
-    // Create game board
-    // this.gameBoard = this.add
-    //   .rectangle(
-    //     boardX + boardWidth / 2,
-    //     boardY + boardHeight / 2,
-    //     boardWidth,
-    //     boardHeight,
-    //     0xfff8dc
-    //   )
-    //   .setStrokeStyle(4, 0x1f2937);
+    this.scale.on("resize", this.resize, this);
+    this.resize(); // Initial resize call
 
-    // Add full screen background first (lowest layer)
-    // const fullScreenBg = this.add
-    //   .image(width / 2, height / 2, "background")
-    //   .setDisplaySize(width, height);
-    //.setDepth(-10);
-
-    // Replace the plain rectangle with an image
     this.gameBoard = this.add
       .image(
         boardX + boardWidth / 2,
@@ -406,8 +406,8 @@ export default class GameScene extends Phaser.Scene {
 
   private setupMobileButtons(): void {
     const { width, height } = this.scale;
-    const buttonSize = 70; // Slightly larger for better touch targets
-    const padding = 5;
+    const buttonSize = 70 * this.containerScale;
+    const padding = 5 * this.containerScale;
 
     // Position the controls at bottom right for better thumb access
     const centerX = width - buttonSize * 1.5;
@@ -541,7 +541,34 @@ export default class GameScene extends Phaser.Scene {
 
   //========= Resizing
   private resize(): void {
+    if (!this.gameBoard) {
+      return; // Exit early if game elements aren't initialized
+    }
     const { width, height } = this.scale;
+
+    this.windowSize = {
+      width: width,
+      height: height,
+    };
+
+    // Calculate scale based on available height (with some padding)
+    // We're using 95% of the viewport height to leave some margin
+    const availableHeight = height * 0.95;
+    const availableWidth = width * 0.95;
+
+    // Calculate both height and width scaling factors
+    const heightScale =
+      availableHeight < this.CONTAINER_HEIGHT
+        ? availableHeight / this.CONTAINER_HEIGHT
+        : 1;
+
+    const widthScale =
+      availableWidth < this.CONTAINER_WIDTH
+        ? availableWidth / this.CONTAINER_WIDTH
+        : 1;
+
+    // Use the smaller scale to ensure the entire game fits in the viewport
+    this.containerScale = Math.min(heightScale, widthScale);
 
     // Calculate responsive grid size
     this.cellSize = Math.floor(Math.min(width / 100, height / 100) * 1.0);
@@ -549,7 +576,7 @@ export default class GameScene extends Phaser.Scene {
 
     const boardWidth = this.GRID_SIZE * this.cellSize;
     const boardHeight = this.GRID_SIZE * this.cellSize;
-    const boardX = (width - boardWidth) / 2;
+    const boardX = (width - boardWidth * this.containerScale) / 2;
     const boardY = height * 0.2;
 
     // Update board and positions
@@ -568,19 +595,35 @@ export default class GameScene extends Phaser.Scene {
     // Resize UI elements with percentage-based positioning
     if (this.titleText) {
       this.titleText.setPosition(width * 0.5, height * 0.1);
-      this.titleText.setFontSize(Math.max(24, Math.floor(width / 25)));
+      this.titleText.setFontSize(
+        Math.max(24, Math.floor(width / 25)) * this.containerScale
+      );
+      this.titleText.setScale(this.containerScale);
+    }
+
+    if (this.scoreText) {
+      this.scoreText.setPosition(width * 0.5, height * 0.15);
+      this.scoreText.setFontSize(
+        Math.max(16, Math.floor(width / 35)) * this.containerScale
+      );
+      this.scoreText.setScale(this.containerScale);
     }
 
     if (this.speedText) {
       this.speedText.setPosition(boardX, height * 0.15);
-      this.speedText.setFontSize(Math.max(16, Math.floor(width / 35)));
-      const textWidth = this.speedText.width;
+      this.speedText.setFontSize(
+        Math.max(16, Math.floor(width / 35)) * this.containerScale
+      );
+      this.speedText.setScale(this.containerScale);
+
+      const textWidth = this.speedText.width * this.containerScale;
 
       if (this.speedDownBtn) {
         this.speedDownBtn.setPosition(
           boardX + textWidth + width * 0.01,
           height * 0.15
         );
+        this.speedDownBtn.setScale(this.containerScale);
       }
 
       const speedValueText = this.children.getByName(
@@ -591,6 +634,7 @@ export default class GameScene extends Phaser.Scene {
           boardX + textWidth + width * 0.05,
           height * 0.15
         );
+        speedValueText.setScale(this.containerScale);
       }
 
       if (this.speedUpBtn) {
@@ -598,12 +642,8 @@ export default class GameScene extends Phaser.Scene {
           boardX + textWidth + width * 0.09,
           height * 0.15
         );
+        this.speedUpBtn.setScale(this.containerScale);
       }
-    }
-
-    if (this.scoreText) {
-      this.scoreText.setPosition(width * 0.5, height * 0.15);
-      this.scoreText.setFontSize(Math.max(16, Math.floor(width / 35)));
     }
 
     // Update snake and food positions
@@ -715,16 +755,22 @@ export default class GameScene extends Phaser.Scene {
       );
     }
 
-    // Create food graphic
-    const boardX = (this.scale.width - this.GRID_SIZE * this.cellSize) / 2;
-    const boardY = this.scale.height * 0.2;
+    // Create food graphic with scaling
+    const { width, height } = this.scale;
+    const boardWidth = this.GRID_SIZE * this.cellSize;
+    const boardX = (width - boardWidth * this.containerScale) / 2;
+    const boardY = height * 0.2;
 
     const foodGraphic = this.add
       .text(
-        boardX + this.food.x * this.cellSize + this.cellSize / 2,
-        boardY + this.food.y * this.cellSize + this.cellSize / 2,
+        boardX +
+          (this.food.x * this.cellSize + this.cellSize / 2) *
+            this.containerScale,
+        boardY +
+          (this.food.y * this.cellSize + this.cellSize / 2) *
+            this.containerScale,
         this.food.emoji,
-        { fontSize: "20px" }
+        { fontSize: `${20 * this.containerScale}px` }
       )
       .setOrigin(0.5);
     //.setDepth(10);
@@ -1069,16 +1115,29 @@ export default class GameScene extends Phaser.Scene {
   }
 
   private updateSnakeGraphics(): void {
-    const boardX = (this.scale.width - this.GRID_SIZE * this.cellSize) / 2;
-    const boardY = this.scale.height * 0.2;
+    // Skip updating if game elements aren't initialized yet
+    if (!this.snakeHead || !this.gameBoard) {
+      return;
+    }
+
+    const { width, height } = this.scale;
+    const boardWidth = this.GRID_SIZE * this.cellSize;
+    const boardHeight = this.GRID_SIZE * this.cellSize;
+
+    const boardX = (width - boardWidth * this.containerScale) / 2;
+    const boardY = height * 0.2;
 
     // Update snake head texture and position
     this.snakeHead.setTexture(this.SNAKE_HEADS[this.direction]);
     this.snakeHead.setPosition(
-      boardX + this.snake[0].x * this.cellSize + this.cellSize / 2,
-      boardY + this.snake[0].y * this.cellSize + this.cellSize / 2
+      boardX +
+        (this.snake[0].x * this.cellSize + this.cellSize / 2) *
+          this.containerScale,
+      boardY +
+        (this.snake[0].y * this.cellSize + this.cellSize / 2) *
+          this.containerScale
     );
-    this.snakeHead.setScale(0.5);
+    this.snakeHead.setScale(0.5 * this.containerScale);
 
     // 1. First, adjust the number of body segments as needed
     let snakeChanged = false;
@@ -1113,14 +1172,23 @@ export default class GameScene extends Phaser.Scene {
     for (let i = 0; i < this.snakeBody.length; i++) {
       const segmentIndex = i + 1;
 
+      // Skip invalid indices
+      if (segmentIndex >= this.snake.length) {
+        continue;
+      }
+
       // Store current texture before updating
       currentTextures[i] = this.snakeBody[i].texture.key as string;
 
-      // Update position
       this.snakeBody[i].setPosition(
-        boardX + this.snake[segmentIndex].x * this.cellSize + this.cellSize / 2,
-        boardY + this.snake[segmentIndex].y * this.cellSize + this.cellSize / 2
+        boardX +
+          (this.snake[segmentIndex].x * this.cellSize + this.cellSize / 2) *
+            this.containerScale,
+        boardY +
+          (this.snake[segmentIndex].y * this.cellSize + this.cellSize / 2) *
+            this.containerScale
       );
+      this.snakeBody[i].setScale(0.5 * this.containerScale);
     }
 
     // 3. Calculate new textures for all segments
@@ -1129,6 +1197,11 @@ export default class GameScene extends Phaser.Scene {
     // Calculate all segment textures
     for (let i = 0; i < this.snakeBody.length; i++) {
       const segmentIndex = i + 1;
+
+      // Skip invalid indices
+      if (segmentIndex >= this.snake.length) {
+        continue;
+      }
 
       if (i === this.snakeBody.length - 1) {
         // This is the tail
@@ -1141,6 +1214,11 @@ export default class GameScene extends Phaser.Scene {
 
     // 4. Only apply texture changes when necessary to avoid flickering
     for (let i = 0; i < this.snakeBody.length; i++) {
+      // Safety check to ensure we have a texture name
+      if (i >= newTextures.length || !newTextures[i]) {
+        continue;
+      }
+
       // Always update textures if the snake changed length or
       // if the texture needs to change
       if (snakeChanged || currentTextures[i] !== newTextures[i]) {
@@ -1148,6 +1226,7 @@ export default class GameScene extends Phaser.Scene {
       }
     }
   }
+
   // Helper method to determine tail texture
   private getTailTexture(bodyIndex: number): string {
     // For a tail, we need to look at the segment before it
