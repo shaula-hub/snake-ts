@@ -37,7 +37,7 @@ export default class MainMenuScene extends Phaser.Scene {
     this.title = this.add
       .text(width / 2, height * 0.15, "SNAKE GAME", {
         fontFamily: "Arial",
-        fontSize: "64px",
+        fontSize: "52px",
         color: COLORS.WHITE,
       })
       .setOrigin(0.5);
@@ -127,7 +127,7 @@ export default class MainMenuScene extends Phaser.Scene {
 
     const isMobile = this.sys.game.device.input.touch;
     const controlsText = isMobile
-      ? "\nSwipe to change direction\nTap to boost speed"
+      ? "\nSwipe to change direction"
       : "\nArrow Keys: Move\n+/-: Speed\nESC: Pause";
 
     this.instructions = this.add

@@ -327,7 +327,7 @@ export default class GameScene extends Phaser.Scene {
 
   private setupMobileButtons(): void {
     const { width, height } = this.scale;
-    const buttonSize = 70; // Slightly larger for better touch targets
+    const buttonSize = 40; // Slightly larger for better touch targets
     const padding = 5;
 
     // Position the controls at bottom right for better thumb access
