@@ -10,14 +10,6 @@ export default class GameScene extends Phaser.Scene {
   private readonly GRID_SIZE = 25;
   private readonly CELL_SIZE = 20;
 
-  private windowSize = {
-    width: typeof window !== "undefined" ? window.innerWidth : 800,
-    height: typeof window !== "undefined" ? window.innerHeight : 600,
-  };
-  private containerScale: number = 1;
-  private readonly CONTAINER_WIDTH = 600; // Base width for the game container
-  private readonly CONTAINER_HEIGHT = 800; // Base height for the game container
-
   private cellSize = 20;
 
   private isMobile: boolean = false;
@@ -98,7 +90,6 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("tail_right", "images/tail_right.png");
 
     this.load.image("game-background", "images/game-background.jpg");
-    // this.load.image("background", "images/background.jpg");
   }
 
   private readonly SNAKE_HEADS = {
@@ -123,13 +114,6 @@ export default class GameScene extends Phaser.Scene {
     const directions = ["UP", "DOWN", "LEFT", "RIGHT"];
     this.direction = directions[Math.floor(Math.random() * directions.length)];
     this.nextDirection = this.direction;
-
-    if (typeof window !== "undefined") {
-      window.addEventListener("resize", () => {
-        // This will trigger the resize method via Phaser's scale manager
-        this.scale.resize(window.innerWidth, window.innerHeight);
-      });
-    }
   }
 
   create() {
@@ -140,9 +124,18 @@ export default class GameScene extends Phaser.Scene {
     const boardY = height * 0.2;
 
     //========== 1. Set up the game world and physics
-    this.scale.on("resize", this.resize, this);
+    // Create game board
+    // this.gameBoard = this.add
+    //   .rectangle(
+    //     boardX + boardWidth / 2,
+    //     boardY + boardHeight / 2,
+    //     boardWidth,
+    //     boardHeight,
+    //     0xfff8dc
+    //   )
+    //   .setStrokeStyle(4, 0x1f2937);
 
-    // Create game board first
+    // Replace the plain rectangle with an image
     this.gameBoard = this.add
       .image(
         boardX + boardWidth / 2,
@@ -293,9 +286,11 @@ export default class GameScene extends Phaser.Scene {
     // Create the snake head
     this.snakeHead = this.add
       .image(
+        //  .text(
         boardX + this.snake[0].x * this.CELL_SIZE + this.CELL_SIZE / 2,
         boardY + this.snake[0].y * this.CELL_SIZE + this.CELL_SIZE / 2,
         this.SNAKE_HEADS[this.direction]
+        // { fontSize: "20px" }
       )
       .setOrigin(0.5);
 
@@ -355,9 +350,6 @@ export default class GameScene extends Phaser.Scene {
         // Set up mobile controls (this will add the directional buttons)
         this.setupMobileControls();
       }
-      this.time.delayedCall(100, () => {
-        this.resize();
-      });
     } // (this.input && this.input.keyboard
   } // create()
 
@@ -406,8 +398,8 @@ export default class GameScene extends Phaser.Scene {
 
   private setupMobileButtons(): void {
     const { width, height } = this.scale;
-    const buttonSize = 70 * this.containerScale;
-    const padding = 5 * this.containerScale;
+    const buttonSize = 70; // Slightly larger for better touch targets
+    const padding = 5;
 
     // Position the controls at bottom right for better thumb access
     const centerX = width - buttonSize * 1.5;
@@ -541,125 +533,73 @@ export default class GameScene extends Phaser.Scene {
 
   //========= Resizing
   private resize(): void {
-    if (!this.gameBoard) {
-      return; // Exit early if game elements aren't initialized
+    const { width, height } = this.scale;
+
+    // Calculate responsive grid size
+    this.cellSize = Math.floor(Math.min(width / 45, height / 45) * 1.0);
+    //this.cellSize = Math.floor(Math.min(width / 25, height / 25) * 0.95);
+
+    const boardWidth = this.GRID_SIZE * this.cellSize;
+    const boardHeight = this.GRID_SIZE * this.cellSize;
+    const boardX = (width - boardWidth) / 2;
+    const boardY = height * 0.2;
+
+    // Update board and positions
+    if (this.gameBoard) {
+      this.gameBoard.setPosition(width * 0.5, boardY + boardHeight * 0.5);
+      this.gameBoard.setDisplaySize(boardWidth, boardHeight);
     }
-    try {
-      const { width, height } = this.scale;
 
-      this.windowSize = {
-        width: width,
-        height: height,
-      };
+    //   this.gameBoard.setPosition(
+    //     boardX + boardWidth / 2,
+    //     boardY + boardHeight / 2
+    //   );
+    //   this.gameBoard.setDisplaySize(boardWidth, boardHeight);
+    // }
 
-      // Calculate scale based on available height (with some padding)
-      // We're using 95% of the viewport height to leave some margin
-      const availableHeight = height * 0.95;
-      const availableWidth = width * 0.95;
-
-      // Calculate both height and width scaling factors
-      const heightScale =
-        availableHeight < this.CONTAINER_HEIGHT
-          ? availableHeight / this.CONTAINER_HEIGHT
-          : 1;
-
-      const widthScale =
-        availableWidth < this.CONTAINER_WIDTH
-          ? availableWidth / this.CONTAINER_WIDTH
-          : 1;
-
-      // Use the smaller scale to ensure the entire game fits in the viewport
-      this.containerScale = Math.min(heightScale, widthScale);
-
-      // Calculate responsive grid size
-      this.cellSize = Math.floor(Math.min(width / 50, height / 50) * 1.0);
-      //this.cellSize = Math.floor(Math.min(width / 25, height / 25) * 0.95);
-
-      const boardWidth = this.GRID_SIZE * this.cellSize;
-      const boardHeight = this.GRID_SIZE * this.cellSize;
-      const boardX = (width - boardWidth * this.containerScale) / 2;
-      const boardY = height * 0.2;
-
-      // Update board and positions
-      if (this.gameBoard) {
-        this.gameBoard.setPosition(width * 0.5, boardY + boardHeight * 0.5);
-        this.gameBoard.setDisplaySize(boardWidth, boardHeight);
-      }
-
-      //   this.gameBoard.setPosition(
-      //     boardX + boardWidth / 2,
-      //     boardY + boardHeight / 2
-      //   );
-      //   this.gameBoard.setDisplaySize(boardWidth, boardHeight);
-      // }
-
-      // Resize UI elements with percentage-based positioning
-      if (this.titleText) {
-        this.titleText.setPosition(width * 0.5, height * 0.1);
-        this.titleText.setFontSize(
-          Math.max(24, Math.floor(width / 25)) * this.containerScale
-        );
-        this.titleText.setScale(this.containerScale);
-        console.log("titleText processed");
-      }
-
-      if (this.scoreText) {
-        this.scoreText.setPosition(width * 0.5, height * 0.15);
-        this.scoreText.setFontSize(
-          Math.max(16, Math.floor(width / 35)) * this.containerScale
-        );
-        this.scoreText.setScale(this.containerScale);
-        console.log("scoreText processed");
-      }
-
-      if (this.speedText) {
-        this.speedText.setPosition(boardX, height * 0.15);
-        this.speedText.setFontSize(
-          Math.max(16, Math.floor(width / 35)) * this.containerScale
-        );
-        this.speedText.setScale(this.containerScale);
-        console.log("speedText processed");
-
-        const textWidth = this.speedText.width * this.containerScale;
-
-        if (this.speedDownBtn) {
-          this.speedDownBtn.setPosition(
-            boardX + textWidth + width * 0.01,
-            height * 0.15
-          );
-          this.speedDownBtn.setScale(this.containerScale);
-          console.log("speedDownBtn processed");
-        }
-
-        const speedValueText = this.children.getByName(
-          "speedValueText"
-        ) as Phaser.GameObjects.Text;
-        if (speedValueText) {
-          speedValueText.setPosition(
-            boardX + textWidth + width * 0.05,
-            height * 0.15
-          );
-          speedValueText.setScale(this.containerScale);
-          console.log("speedValueText processed");
-        }
-
-        if (this.speedUpBtn) {
-          this.speedUpBtn.setPosition(
-            boardX + textWidth + width * 0.09,
-            height * 0.15
-          );
-          this.speedUpBtn.setScale(this.containerScale);
-          console.log("speedUpBtn processed");
-        }
-      }
-
-      // Only update snake graphics if the snake head exists
-      if (this.snakeHead) {
-        this.updateSnakeGraphics();
-      }
-    } catch (error) {
-      console.warn("Error during resize:", error);
+    // Resize UI elements with percentage-based positioning
+    if (this.titleText) {
+      this.titleText.setPosition(width * 0.5, height * 0.1);
+      this.titleText.setFontSize(Math.max(24, Math.floor(width / 25)));
     }
+
+    if (this.speedText) {
+      this.speedText.setPosition(boardX, height * 0.15);
+      this.speedText.setFontSize(Math.max(16, Math.floor(width / 35)));
+      const textWidth = this.speedText.width;
+
+      if (this.speedDownBtn) {
+        this.speedDownBtn.setPosition(
+          boardX + textWidth + width * 0.01,
+          height * 0.15
+        );
+      }
+
+      const speedValueText = this.children.getByName(
+        "speedValueText"
+      ) as Phaser.GameObjects.Text;
+      if (speedValueText) {
+        speedValueText.setPosition(
+          boardX + textWidth + width * 0.05,
+          height * 0.15
+        );
+      }
+
+      if (this.speedUpBtn) {
+        this.speedUpBtn.setPosition(
+          boardX + textWidth + width * 0.09,
+          height * 0.15
+        );
+      }
+    }
+
+    if (this.scoreText) {
+      this.scoreText.setPosition(width * 0.5, height * 0.15);
+      this.scoreText.setFontSize(Math.max(16, Math.floor(width / 35)));
+    }
+
+    // Update snake and food positions
+    this.updateSnakeGraphics();
   }
 
   //========= Speed, timer
@@ -767,25 +707,18 @@ export default class GameScene extends Phaser.Scene {
       );
     }
 
-    // Create food graphic with scaling
-    const { width, height } = this.scale;
-    const boardWidth = this.GRID_SIZE * this.cellSize;
-    const boardX = (width - boardWidth * this.containerScale) / 2;
-    const boardY = height * 0.2;
+    // Create food graphic
+    const boardX = (this.scale.width - this.GRID_SIZE * this.cellSize) / 2;
+    const boardY = this.scale.height * 0.2;
 
     const foodGraphic = this.add
       .text(
-        boardX +
-          (this.food.x * this.cellSize + this.cellSize / 2) *
-            this.containerScale,
-        boardY +
-          (this.food.y * this.cellSize + this.cellSize / 2) *
-            this.containerScale,
+        boardX + this.food.x * this.cellSize + this.cellSize / 2,
+        boardY + this.food.y * this.cellSize + this.cellSize / 2,
         this.food.emoji,
-        { fontSize: `${20 * this.containerScale}px` }
+        { fontSize: "20px" }
       )
       .setOrigin(0.5);
-    //.setDepth(10);
 
     this.foodGraphics.push(foodGraphic);
   }
@@ -830,152 +763,106 @@ export default class GameScene extends Phaser.Scene {
   }
 
   private generateFoodTetra(): void {
-    try {
-      // Clear any existing food
-      this.clearFoodGraphics();
+    // Clear any existing food
+    this.clearFoodGraphics();
 
-      if (!this.snake || this.snake.length === 0) {
-        console.warn("Cannot generate food: Snake is not initialized");
-        return;
-      }
+    // Get random tetromino shape
+    const shapeKeys = Object.keys(this.TETROMINO_SHAPES);
+    const randomShapeKey =
+      shapeKeys[Math.floor(Math.random() * shapeKeys.length)];
+    const originalShape = this.TETROMINO_SHAPES[randomShapeKey];
 
-      // Get random tetromino shape
-      const shapeKeys = Object.keys(this.TETROMINO_SHAPES);
-      const randomShapeKey =
-        shapeKeys[Math.floor(Math.random() * shapeKeys.length)];
-      const originalShape = this.TETROMINO_SHAPES[randomShapeKey];
+    // Rotate the shape randomly 0-3 times
+    const rotationCount = Math.floor(Math.random() * 4);
+    const rotatedShape = this.rotateShape(originalShape, rotationCount);
+    const foodEmoji =
+      this.SNAKE_FOOD[Math.floor(Math.random() * this.SNAKE_FOOD.length)];
 
-      console.log(`Selected shape: ${randomShapeKey}`);
+    // Initial position (keep away from borders)
+    let posX =
+      Math.floor(
+        Math.random() * (this.GRID_SIZE - rotatedShape[0].length - 4)
+      ) + 2;
+    let posY =
+      Math.floor(Math.random() * (this.GRID_SIZE - rotatedShape.length - 4)) +
+      2;
 
-      // Rotate the shape randomly 0-3 times
-      const rotationCount = Math.floor(Math.random() * 4);
-      const rotatedShape = this.rotateShape(originalShape, rotationCount);
-      const foodEmoji =
-        this.SNAKE_FOOD[Math.floor(Math.random() * this.SNAKE_FOOD.length)];
+    // Adjust position if needed to avoid snake
+    let isOverlapping = true;
+    let attempts = 0;
+    const maxAttempts = 10;
 
-      console.log(
-        `Shape dimensions after rotation: ${rotatedShape.length}x${rotatedShape[0].length}`
-      );
+    while (isOverlapping && attempts < maxAttempts) {
+      isOverlapping = false;
 
-      // Initial position (keep away from borders)
-      let posX =
-        Math.floor(
-          Math.random() * (this.GRID_SIZE - rotatedShape[0].length - 4)
-        ) + 2;
-      let posY =
-        Math.floor(Math.random() * (this.GRID_SIZE - rotatedShape.length - 4)) +
-        2;
-
-      console.log(`Initial position for food: (${posX}, ${posY})`);
-
-      // Adjust position if needed to avoid snake
-      let isOverlapping = true;
-      let attempts = 0;
-      const maxAttempts = 10;
-
-      while (isOverlapping && attempts < maxAttempts) {
-        isOverlapping = false;
-
-        // Check each cell of the shape
-        for (let y = 0; y < rotatedShape.length; y++) {
-          for (let x = 0; x < rotatedShape[y].length; x++) {
-            if (rotatedShape[y][x]) {
-              const foodX = posX + x;
-              const foodY = posY + y;
-
-              // Check if position is valid
-              if (
-                foodX < 0 ||
-                foodX >= this.GRID_SIZE ||
-                foodY < 0 ||
-                foodY >= this.GRID_SIZE ||
-                this.snake.some(
-                  (segment) => segment.x === foodX && segment.y === foodY
-                )
-              ) {
-                isOverlapping = true;
-                posX =
-                  Math.floor(
-                    Math.random() *
-                      (this.GRID_SIZE - rotatedShape[0].length - 4)
-                  ) + 2;
-                posY =
-                  Math.floor(
-                    Math.random() * (this.GRID_SIZE - rotatedShape.length - 4)
-                  ) + 2;
-
-                console.log(
-                  `Repositioning to: (${posX}, ${posY}) due to overlap`
-                );
-
-                break;
-              }
-            }
-          }
-          if (isOverlapping) break;
-        }
-
-        attempts++;
-      }
-
-      // Create food items array and graphics
-      this.foodItems = [];
-      // Safety check to ensure the scene is still active
-      if (!this.scene || !this.sys || !this.sys.game) {
-        console.warn("Scene not fully initialized, postponing food generation");
-        this.time.delayedCall(100, () => {
-          this.generateFoodTetra();
-        });
-        return;
-      }
-
-      // Get scaling and positioning parameters
-      const { width, height } = this.scale;
-      const boardWidth = this.GRID_SIZE * this.cellSize;
-      const boardHeight = this.GRID_SIZE * this.cellSize;
-      const boardX = (width - boardWidth * this.containerScale) / 2;
-      const boardY = height * 0.2;
-
-      // Log scale factors
-      console.log(
-        `Board dimensions: ${boardWidth}x${boardHeight}, Scale: ${this.containerScale}`
-      );
-      console.log(`Board position: (${boardX}, ${boardY})`);
-
+      // Check each cell of the shape
       for (let y = 0; y < rotatedShape.length; y++) {
         for (let x = 0; x < rotatedShape[y].length; x++) {
           if (rotatedShape[y][x]) {
             const foodX = posX + x;
             const foodY = posY + y;
 
-            // Add to food items array
-            this.foodItems.push({
-              x: foodX,
-              y: foodY,
-              emoji: foodEmoji,
-              id: `food-${foodX}-${foodY}-${Date.now()}`,
-            });
-
-            // Create food graphic with proper scaling
-            const foodGraphic = this.add
-              .text(
-                boardX +
-                  (foodX * this.cellSize + this.cellSize / 2) *
-                    this.containerScale,
-                boardY +
-                  (foodY * this.cellSize + this.cellSize / 2) *
-                    this.containerScale,
-                foodEmoji,
-                { fontSize: `${20 * this.containerScale}px` }
+            // Check if position is valid
+            if (
+              foodX < 0 ||
+              foodX >= this.GRID_SIZE ||
+              foodY < 0 ||
+              foodY >= this.GRID_SIZE ||
+              this.snake.some(
+                (segment) => segment.x === foodX && segment.y === foodY
               )
-              .setOrigin(0.5);
-
-            this.foodGraphics.push(foodGraphic);
+            ) {
+              isOverlapping = true;
+              posX =
+                Math.floor(
+                  Math.random() * (this.GRID_SIZE - rotatedShape[0].length - 4)
+                ) + 2;
+              posY =
+                Math.floor(
+                  Math.random() * (this.GRID_SIZE - rotatedShape.length - 4)
+                ) + 2;
+              break;
+            }
           }
         }
+        if (isOverlapping) break;
       }
-    } catch (error) {
-      console.warn("Error generating food tetromino:", error);
+
+      attempts++;
+    }
+
+    // Create food items array and graphics
+    this.foodItems = [];
+    const boardX = (this.scale.width - this.GRID_SIZE * this.cellSize) / 2;
+    const boardY = this.scale.height * 0.2;
+
+    for (let y = 0; y < rotatedShape.length; y++) {
+      for (let x = 0; x < rotatedShape[y].length; x++) {
+        if (rotatedShape[y][x]) {
+          const foodX = posX + x;
+          const foodY = posY + y;
+
+          // Add to food items array
+          this.foodItems.push({
+            x: foodX,
+            y: foodY,
+            emoji: foodEmoji,
+            id: `food-${foodX}-${foodY}-${Date.now()}`,
+          });
+
+          // Create food graphic
+          const foodGraphic = this.add
+            .text(
+              boardX + foodX * this.cellSize + this.cellSize / 2,
+              boardY + foodY * this.cellSize + this.cellSize / 2,
+              foodEmoji,
+              { fontSize: "20px" }
+            )
+            .setOrigin(0.5);
+
+          this.foodGraphics.push(foodGraphic);
+        }
+      }
     }
   }
 
@@ -1173,38 +1060,16 @@ export default class GameScene extends Phaser.Scene {
   }
 
   private updateSnakeGraphics(): void {
-    // Exit if essential components are missing
-    if (
-      !this.snakeHead ||
-      !this.gameBoard ||
-      !this.sys ||
-      !this.sys.game ||
-      !this.scene
-    ) {
-      console.log(
-        "Skipping snake graphics update - essential components missing"
-      );
-      return;
-    }
-
-    const { width, height } = this.scale;
-    const boardWidth = this.GRID_SIZE * this.cellSize;
-    const boardHeight = this.GRID_SIZE * this.cellSize;
-
-    const boardX = (width - boardWidth * this.containerScale) / 2;
-    const boardY = height * 0.2;
+    const boardX = (this.scale.width - this.GRID_SIZE * this.cellSize) / 2;
+    const boardY = this.scale.height * 0.2;
 
     // Update snake head texture and position
     this.snakeHead.setTexture(this.SNAKE_HEADS[this.direction]);
     this.snakeHead.setPosition(
-      boardX +
-        (this.snake[0].x * this.cellSize + this.cellSize / 2) *
-          this.containerScale,
-      boardY +
-        (this.snake[0].y * this.cellSize + this.cellSize / 2) *
-          this.containerScale
+      boardX + this.snake[0].x * this.cellSize + this.cellSize / 2,
+      boardY + this.snake[0].y * this.cellSize + this.cellSize / 2
     );
-    this.snakeHead.setScale(0.5 * this.containerScale);
+    this.snakeHead.setScale(0.5);
 
     // 1. First, adjust the number of body segments as needed
     let snakeChanged = false;
@@ -1228,7 +1093,6 @@ export default class GameScene extends Phaser.Scene {
         )
         .setOrigin(0.5)
         .setScale(0.5);
-      //.setDepth(10);
 
       this.snakeBody.push(segment);
       snakeChanged = true;
@@ -1239,23 +1103,14 @@ export default class GameScene extends Phaser.Scene {
     for (let i = 0; i < this.snakeBody.length; i++) {
       const segmentIndex = i + 1;
 
-      // Skip invalid indices
-      if (segmentIndex >= this.snake.length) {
-        continue;
-      }
-
       // Store current texture before updating
       currentTextures[i] = this.snakeBody[i].texture.key as string;
 
+      // Update position
       this.snakeBody[i].setPosition(
-        boardX +
-          (this.snake[segmentIndex].x * this.cellSize + this.cellSize / 2) *
-            this.containerScale,
-        boardY +
-          (this.snake[segmentIndex].y * this.cellSize + this.cellSize / 2) *
-            this.containerScale
+        boardX + this.snake[segmentIndex].x * this.cellSize + this.cellSize / 2,
+        boardY + this.snake[segmentIndex].y * this.cellSize + this.cellSize / 2
       );
-      this.snakeBody[i].setScale(0.5 * this.containerScale);
     }
 
     // 3. Calculate new textures for all segments
@@ -1264,11 +1119,6 @@ export default class GameScene extends Phaser.Scene {
     // Calculate all segment textures
     for (let i = 0; i < this.snakeBody.length; i++) {
       const segmentIndex = i + 1;
-
-      // Skip invalid indices
-      if (segmentIndex >= this.snake.length) {
-        continue;
-      }
 
       if (i === this.snakeBody.length - 1) {
         // This is the tail
@@ -1281,11 +1131,6 @@ export default class GameScene extends Phaser.Scene {
 
     // 4. Only apply texture changes when necessary to avoid flickering
     for (let i = 0; i < this.snakeBody.length; i++) {
-      // Safety check to ensure we have a texture name
-      if (i >= newTextures.length || !newTextures[i]) {
-        continue;
-      }
-
       // Always update textures if the snake changed length or
       // if the texture needs to change
       if (snakeChanged || currentTextures[i] !== newTextures[i]) {
@@ -1293,7 +1138,6 @@ export default class GameScene extends Phaser.Scene {
       }
     }
   }
-
   // Helper method to determine tail texture
   private getTailTexture(bodyIndex: number): string {
     // For a tail, we need to look at the segment before it
