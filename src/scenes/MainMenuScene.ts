@@ -84,7 +84,10 @@ export default class MainMenuScene extends Phaser.Scene {
     });
 
     // Update the initially selected type
-    this.updateTypeSelection();
+    //this.updateTypeSelection();
+    setTimeout(() => {
+      this.updateTypeSelection();
+    }, 100);
 
     // Start button
     this.startButton = this.add
@@ -171,7 +174,18 @@ export default class MainMenuScene extends Phaser.Scene {
   }
 
   private updateTypeSelection(): void {
+    // Add null check to ensure gameTypeTexts are available
+    if (!this.gameTypeTexts || this.gameTypeTexts.length === 0) {
+      console.log("Game type texts not initialized yet");
+      return;
+    }
+
     this.gameTypeTexts.forEach((text, index) => {
+      if (!text) {
+        console.log(`Text object at index ${index} is null`);
+        return;
+      }
+
       if (index === this.selectedType) {
         text.setStyle({
           color: COLORS.HIGHLIGHT,
