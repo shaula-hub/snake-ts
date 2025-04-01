@@ -19,7 +19,7 @@ export default class PauseScene extends Phaser.Scene {
     this.add
       .text(width / 2, height / 3, "GAME PAUSED", {
         fontFamily: "Arial",
-        fontSize: "48px",
+        fontSize: "32px",
         color: COLORS.NORMAL,
       })
       .setOrigin(0.5);
@@ -28,7 +28,7 @@ export default class PauseScene extends Phaser.Scene {
     const resumeButton = this.add
       .text(width / 2, height / 2, "Resume", {
         fontFamily: "Arial",
-        fontSize: "32px",
+        fontSize: "24px",
         color: "#ffffff",
         backgroundColor: "#22c55e",
         padding: { x: 20, y: 10 },
@@ -53,7 +53,7 @@ export default class PauseScene extends Phaser.Scene {
     const menuButton = this.add
       .text(width / 2, height / 2 + 80, "Main Menu", {
         fontFamily: "Arial",
-        fontSize: "32px",
+        fontSize: "24px",
         color: "#ffffff",
         backgroundColor: "#22c55e",
         padding: { x: 20, y: 10 },

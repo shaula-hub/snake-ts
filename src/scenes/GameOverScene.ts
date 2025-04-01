@@ -25,7 +25,7 @@ export default class GameOverScene extends Phaser.Scene {
     this.add
       .text(width / 2, height / 3, "GAME OVER!", {
         fontFamily: "Arial",
-        fontSize: "52px",
+        fontSize: "36px",
         color: COLORS.WHITE,
       })
       .setOrigin(0.5);
@@ -34,7 +34,7 @@ export default class GameOverScene extends Phaser.Scene {
     this.add
       .text(width / 2, height * 0.45, `Your final score: ${this.score}`, {
         fontFamily: "Arial",
-        fontSize: "40px",
+        fontSize: "28px",
         color: COLORS.WHITE,
       })
       .setOrigin(0.5);
@@ -43,7 +43,7 @@ export default class GameOverScene extends Phaser.Scene {
     this.playAgainButton = this.add
       .text(width / 2, height * 0.65, "Play Again", {
         fontFamily: "Arial",
-        fontSize: "32px",
+        fontSize: "20px",
         color: COLORS.WHITE,
         backgroundColor: COLORS.BUTTON_HOVER_BG, // Start with highlighted color
         padding: { x: 20, y: 10 },
@@ -63,14 +63,15 @@ export default class GameOverScene extends Phaser.Scene {
 
     // Settings button
     this.settingsButton = this.add
-      .text(width / 2, height * 0.75, "Settings", {
+      .text(width / 2, height * 0.8, "Settings", {
         fontFamily: "Arial",
-        fontSize: "32px",
+        fontSize: "20x",
         color: COLORS.WHITE,
         backgroundColor: COLORS.BUTTON_BG, // Normal color
         padding: { x: 20, y: 10 },
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setScale(1.05);
 
     this.settingsButton
       .setInteractive({ useHandCursor: true })

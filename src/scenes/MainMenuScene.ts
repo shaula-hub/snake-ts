@@ -37,7 +37,7 @@ export default class MainMenuScene extends Phaser.Scene {
     this.title = this.add
       .text(width / 2, height * 0.15, "SNAKE GAME", {
         fontFamily: "Arial",
-        fontSize: "52px",
+        fontSize: "36px",
         color: COLORS.WHITE,
       })
       .setOrigin(0.5);
@@ -46,7 +46,7 @@ export default class MainMenuScene extends Phaser.Scene {
     this.add
       .text(width / 2, height * 0.3, "Game Type:", {
         fontFamily: "Arial",
-        fontSize: "40px",
+        fontSize: "30px",
         color: COLORS.HIGHLIGHT,
         // fontStyle: "bold",
         // font: "bold 40px Arial"
@@ -66,7 +66,7 @@ export default class MainMenuScene extends Phaser.Scene {
       const y = (height * 2) / 5 + index * 40;
       const text = this.add
         .text(width / 2, y, type.charAt(0).toUpperCase() + type.slice(1), {
-          fontSize: "40px",
+          fontSize: "30px",
           color: COLORS.HIGHLIGHT,
           // fontStyle: "bold",
           // font: "bold 40px Arial"
@@ -91,9 +91,9 @@ export default class MainMenuScene extends Phaser.Scene {
 
     // Start button
     this.startButton = this.add
-      .text(width / 2, (height * 3) / 5, "Start Game", {
+      .text(width / 2, (height * 3) / 4, "Start Game", {
         fontFamily: "Arial",
-        fontSize: "32px",
+        fontSize: "24px",
         color: COLORS.WHITE,
         backgroundColor: COLORS.BUTTON_BG,
         padding: { x: 20, y: 10 },
