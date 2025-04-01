@@ -522,137 +522,74 @@ export default class GameScene extends Phaser.Scene {
   //========= Resizing
   private resize(): void {
     const { width, height } = this.scale;
-    console.groupCollapsed("[RESIZE] width height: ", width, height);
 
-    // Calculate responsive grid size
-    this.cellSize = Math.floor(Math.min(width / 45, height / 45) * 1.0);
+    // Determine if we're on a mobile device
+    this.isMobile =
+      !this.sys.game.device.os.desktop ||
+      this.sys.game.device.input.touch ||
+      window.innerWidth < 800;
 
-    const boardWidth = this.GRID_SIZE * this.cellSize;
+    // Calculate responsive grid size and board dimensions based on device type
+    let boardWidth: number;
+
+    if (this.isMobile) {
+      // For mobile: use 95% of screen width
+      boardWidth = width * 0.95;
+      // Calculate cellSize based on the new board width
+      this.cellSize = boardWidth / this.GRID_SIZE;
+    } else {
+      // For desktop: use the original calculation
+      this.cellSize = Math.floor(Math.min(width / 45, height / 45) * 1.0);
+      boardWidth = this.GRID_SIZE * this.cellSize;
+    }
+
     const boardHeight = this.GRID_SIZE * this.cellSize;
     const boardX = (width - boardWidth) / 2;
     const boardY = height * this.BOARD_Y_PERCENT;
 
+    // Check if scene is still active before updating objects
+    if (!this.scene.isActive()) return;
+
     // Update board position and size
-    if (this.gameBoard) {
+    if (this.gameBoard && this.gameBoard.active) {
       this.gameBoard.setPosition(width * 0.5, boardY + boardHeight * 0.5);
       this.gameBoard.setDisplaySize(boardWidth, boardHeight);
     }
 
     // Resize UI elements with percentage-based positioning
-    if (this.titleText) {
+    if (this.titleText && this.titleText.active) {
       this.titleText.setPosition(width * 0.5, height * this.TITLE_Y_PERCENT);
       this.titleText.setFontSize(Math.max(24, Math.floor(width / 40)));
     }
 
-    if (this.scoreText) {
+    // Calculate UI font size
+    const uiFontSize = Math.min(14, Math.floor(width / 80));
+
+    if (this.scoreText && this.scoreText.active) {
       this.scoreText.setPosition(width * 0.5, height * this.UI_Y_PERCENT);
-      this.scoreText.setFontSize(Math.max(12, Math.floor(width / 100)));
+      this.scoreText.setFontSize(uiFontSize);
     }
 
-    if (this.speedText) {
+    if (this.speedText && this.speedText.active) {
       this.speedText.setPosition(boardX, height * this.UI_Y_PERCENT);
-      this.speedText.setFontSize(Math.max(12, Math.floor(width / 100)));
+      this.speedText.setFontSize(uiFontSize);
+
       const textWidth = this.speedText.width;
 
-      if (this.speedDownBtn) {
+      if (this.speedDownBtn && this.speedDownBtn.active) {
         this.speedDownBtn.setPosition(
           boardX + textWidth + width * 0.005,
           height * this.UI_Y_PERCENT
         );
-        this.speedDownBtn.setFontSize(Math.max(12, Math.floor(width / 100)));
+        this.speedDownBtn.setFontSize(uiFontSize);
 
-        if (this.speedUpBtn) {
+        if (this.speedUpBtn && this.speedUpBtn.active) {
           this.speedUpBtn.setPosition(
             boardX + textWidth + this.speedDownBtn.width + width * 0.005,
             height * this.UI_Y_PERCENT
           );
-          this.speedUpBtn.setFontSize(Math.max(12, Math.floor(width / 100)));
+          this.speedUpBtn.setFontSize(uiFontSize);
         }
-      }
-
-      if (this.scoreText) {
-        this.scoreText.setPosition(width * 0.5, height * this.UI_Y_PERCENT);
-        this.scoreText.setFontSize(Math.max(12, Math.floor(width / 100)));
-      }
-      // Update mobile controls container position if it exists
-      if (this.controlsContainer) {
-        //if (this.isMobile && this.controlsContainer) {
-        const boardWidth = this.GRID_SIZE * this.cellSize;
-        const boardHeight = this.GRID_SIZE * this.cellSize;
-        const boardX = (width - boardWidth) / 2;
-        const boardY = height * this.BOARD_Y_PERCENT;
-
-        // Calculate button size again to ensure proper positioning
-        const buttonSize = boardWidth * 0.1;
-
-        // Update container position to stay at bottom-right of game board
-        this.controlsContainer.setPosition(
-          boardX + boardWidth - buttonSize * 1.5,
-          boardY + boardHeight - buttonSize * 1.5
-        );
-
-        // Update the size of the background and buttons based on the new cell size
-        const controlsBg = this.controlsContainer.getAt(
-          0
-        ) as Phaser.GameObjects.Arc;
-        controlsBg.setRadius(buttonSize * 2);
-
-        // Update sizes of buttons and text - grab each element and resize
-        const padding = buttonSize * 0.2;
-
-        // Update UP button and text
-        const upButton = this.controlsContainer.getAt(
-          1
-        ) as Phaser.GameObjects.Rectangle;
-        upButton.setSize(buttonSize, buttonSize);
-        upButton.setPosition(0, -buttonSize - padding);
-
-        const upText = this.controlsContainer.getAt(
-          2
-        ) as Phaser.GameObjects.Text;
-        upText.setFontSize(buttonSize * 0.6);
-        upText.setPosition(0, -buttonSize - padding);
-
-        // Update DOWN button and text
-        const downButton = this.controlsContainer.getAt(
-          3
-        ) as Phaser.GameObjects.Rectangle;
-        downButton.setSize(buttonSize, buttonSize);
-        downButton.setPosition(0, buttonSize + padding);
-
-        const downText = this.controlsContainer.getAt(
-          4
-        ) as Phaser.GameObjects.Text;
-        downText.setFontSize(buttonSize * 0.6);
-        downText.setPosition(0, buttonSize + padding);
-
-        // Update LEFT button and text
-        const leftButton = this.controlsContainer.getAt(
-          5
-        ) as Phaser.GameObjects.Rectangle;
-        leftButton.setSize(buttonSize, buttonSize);
-        leftButton.setPosition(-buttonSize - padding, 0);
-
-        const leftText = this.controlsContainer.getAt(
-          6
-        ) as Phaser.GameObjects.Text;
-        leftText.setFontSize(buttonSize * 0.6);
-        leftText.setPosition(-buttonSize - padding, 0);
-
-        // Update RIGHT button and text
-        const rightButton = this.controlsContainer.getAt(
-          7
-        ) as Phaser.GameObjects.Rectangle;
-        rightButton.setSize(buttonSize, buttonSize);
-        rightButton.setPosition(buttonSize + padding, 0);
-
-        const rightText = this.controlsContainer.getAt(
-          8
-        ) as Phaser.GameObjects.Text;
-        rightText.setFontSize(buttonSize * 0.6);
-        rightText.setPosition(buttonSize + padding, 0);
-
-        this.updateControlsVisibility();
       }
     }
 
@@ -660,16 +597,132 @@ export default class GameScene extends Phaser.Scene {
     const pauseButton = this.children.getByName(
       "pauseButton"
     ) as Phaser.GameObjects.Text;
-    if (pauseButton) {
+    if (pauseButton && pauseButton.active) {
       pauseButton.setPosition(boardX + boardWidth, height * this.UI_Y_PERCENT);
-      pauseButton.setFontSize(Math.max(8, Math.floor(width / 100)));
+      pauseButton.setFontSize(uiFontSize);
     }
 
-    // Update snake and food positions
-    this.updateSnakeGraphics();
+    // Update mobile controls container position if it exists
+    if (this.controlsContainer && this.controlsContainer.active) {
+      // Calculate button size based on board width
+      const buttonSize = boardWidth * 0.1;
 
-    // Update food graphics positions
-    this.updateFoodGraphics();
+      // Update container position to stay at bottom-right of game board
+      this.controlsContainer.setPosition(
+        boardX + boardWidth - buttonSize * 1.5,
+        boardY + boardHeight - buttonSize * 1.5
+      );
+
+      // Try-catch to handle possible null references
+      try {
+        // Update the size of the background and buttons
+        const controlsBg = this.controlsContainer.getAt(
+          0
+        ) as Phaser.GameObjects.Arc;
+        if (controlsBg && controlsBg.active) {
+          controlsBg.setRadius(buttonSize * 2);
+        }
+
+        // Update sizes of buttons and text
+        const padding = buttonSize * 0.2;
+
+        // Update UP button and text
+        const upButton = this.controlsContainer.getAt(
+          1
+        ) as Phaser.GameObjects.Rectangle;
+        if (upButton && upButton.active) {
+          upButton.setSize(buttonSize, buttonSize);
+          upButton.setPosition(0, -buttonSize - padding);
+        }
+
+        const upText = this.controlsContainer.getAt(
+          2
+        ) as Phaser.GameObjects.Text;
+        if (upText && upText.active) {
+          upText.setFontSize(buttonSize * 0.6);
+          upText.setPosition(0, -buttonSize - padding);
+        }
+
+        // Update DOWN button and text
+        const downButton = this.controlsContainer.getAt(
+          3
+        ) as Phaser.GameObjects.Rectangle;
+        if (downButton && downButton.active) {
+          downButton.setSize(buttonSize, buttonSize);
+          downButton.setPosition(0, buttonSize + padding);
+        }
+
+        const downText = this.controlsContainer.getAt(
+          4
+        ) as Phaser.GameObjects.Text;
+        if (downText && downText.active) {
+          downText.setFontSize(buttonSize * 0.6);
+          downText.setPosition(0, buttonSize + padding);
+        }
+
+        // Update LEFT button and text
+        const leftButton = this.controlsContainer.getAt(
+          5
+        ) as Phaser.GameObjects.Rectangle;
+        if (leftButton && leftButton.active) {
+          leftButton.setSize(buttonSize, buttonSize);
+          leftButton.setPosition(-buttonSize - padding, 0);
+        }
+
+        const leftText = this.controlsContainer.getAt(
+          6
+        ) as Phaser.GameObjects.Text;
+        if (leftText && leftText.active) {
+          leftText.setFontSize(buttonSize * 0.6);
+          leftText.setPosition(-buttonSize - padding, 0);
+        }
+
+        // Update RIGHT button and text
+        const rightButton = this.controlsContainer.getAt(
+          7
+        ) as Phaser.GameObjects.Rectangle;
+        if (rightButton && rightButton.active) {
+          rightButton.setSize(buttonSize, buttonSize);
+          rightButton.setPosition(buttonSize + padding, 0);
+        }
+
+        const rightText = this.controlsContainer.getAt(
+          8
+        ) as Phaser.GameObjects.Text;
+        if (rightText && rightText.active) {
+          rightText.setFontSize(buttonSize * 0.6);
+          rightText.setPosition(buttonSize + padding, 0);
+        }
+      } catch (e) {
+        console.warn("Error updating control buttons:", e);
+      }
+    }
+
+    // Always update controls visibility regardless of current device type
+    this.updateControlsVisibility();
+
+    // Try to update snake graphics if they exist
+    try {
+      if (
+        this.snake &&
+        this.snake.length > 0 &&
+        this.snakeHead &&
+        this.snakeHead.active
+      ) {
+        this.updateSnakeGraphics();
+      }
+    } catch (e) {
+      console.warn("Error updating snake graphics:", e);
+    }
+
+    // Try to update food graphics if they exist
+    try {
+      if (this.foodGraphics && this.foodGraphics.length > 0) {
+        this.updateFoodGraphics();
+      }
+    } catch (e) {
+      console.warn("Error updating food graphics:", e);
+    }
   }
 
   private updateFoodGraphics(): void {
