@@ -2,6 +2,9 @@ import Phaser from "phaser";
 import { COLORS } from "./constants";
 
 export default class PauseScene extends Phaser.Scene {
+  private resumeButton!: Phaser.GameObjects.Text;
+  private menuButton!: Phaser.GameObjects.Text;
+
   constructor() {
     super({ key: "PauseScene" });
   }
@@ -10,10 +13,15 @@ export default class PauseScene extends Phaser.Scene {
     const { width, height } = this.scale;
 
     // Add semi-transparent background
-    this.add
+    const overlay = this.add
       .rectangle(0, 0, width, height, 0x000000, 0.7)
       .setOrigin(0)
-      .setScrollFactor(0);
+      .setScrollFactor(0)
+      .setInteractive() // Make overlay interactive
+      .on("pointerdown", () => {
+        // Resume game when clicking anywhere on the overlay (except menu button)
+        this.resumeGame();
+      });
 
     // Pause text
     this.add
@@ -25,32 +33,39 @@ export default class PauseScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     // Resume button
-    const resumeButton = this.add
+    this.resumeButton = this.add
       .text(width / 2, height / 2, "Resume", {
         fontFamily: "Arial",
         fontSize: "24px",
         color: "#ffffff",
-        backgroundColor: "#22c55e",
+        backgroundColor: "#6b238d", // Start with hover state
         padding: { x: 20, y: 10 },
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setScale(1.05); // Start with hover scale
 
-    resumeButton
+    this.resumeButton
       .setInteractive({ useHandCursor: true })
       .on("pointerover", () => {
-        resumeButton.setStyle({ backgroundColor: "#6b238d" });
-        resumeButton.setScale(1.05);
+        this.resumeButton.setStyle({ backgroundColor: "#6b238d" });
+        this.resumeButton.setColor("#FFBF00"); // Change text to gold on hover
+        this.resumeButton.setScale(1.05);
       })
       .on("pointerout", () => {
-        resumeButton.setStyle({ backgroundColor: "#22c55e" });
-        resumeButton.setScale(1);
+        // Keep resume button always in hover state
+        this.resumeButton.setStyle({ backgroundColor: "#6b238d" });
+        this.resumeButton.setColor("#FFBF00");
+        this.resumeButton.setScale(1.05);
       })
       .on("pointerdown", () => {
         this.resumeGame();
       });
 
+    // Set initial state of resume button as hovered
+    this.resumeButton.setColor("#FFBF00");
+
     // Menu button
-    const menuButton = this.add
+    this.menuButton = this.add
       .text(width / 2, height / 2 + 80, "Main Menu", {
         fontFamily: "Arial",
         fontSize: "24px",
@@ -60,49 +75,70 @@ export default class PauseScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    menuButton
-      .setInteractive({ useHandCursor: true })
+    this.menuButton
+      .setInteractive({ useHandCursor: true, stopPropagation: true }) // Stop propagation to prevent overlay click
       .on("pointerover", () => {
-        menuButton.setStyle({ backgroundColor: "#6b238d" });
-        menuButton.setScale(1.05);
+        this.menuButton.setStyle({ backgroundColor: "#6b238d" });
+        this.menuButton.setScale(1.05);
       })
       .on("pointerout", () => {
-        menuButton.setStyle({ backgroundColor: "#22c55e" });
-        menuButton.setScale(1);
+        this.menuButton.setStyle({ backgroundColor: "#22c55e" });
+        this.menuButton.setScale(1);
       })
-      .on("pointerdown", () => {
+      .on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+        pointer.event.stopPropagation(); // Prevent the click from reaching the overlay
         this.returnToMenu();
       });
 
-    // Add ESC key to resume - null check before accessing keyboard
+    // Add keyboard controls
     if (this.input && this.input.keyboard) {
-      this.input.keyboard.once("keydown-ESC", () => {
+      // ESC to resume
+      this.input.keyboard.on("keydown-ESC", () => {
         this.resumeGame();
+      });
+
+      // ENTER to resume
+      this.input.keyboard.on("keydown-ENTER", () => {
+        this.resumeGame();
+      });
+
+      // SPACE to resume
+      this.input.keyboard.on("keydown-SPACE", () => {
+        this.resumeGame();
+      });
+
+      // Up/Down to navigate between buttons
+      this.input.keyboard.on("keydown-DOWN", () => {
+        // Move focus to menu button
+        this.resumeButton.setStyle({ backgroundColor: "#22c55e" });
+        this.resumeButton.setColor("#ffffff");
+        this.resumeButton.setScale(1);
+
+        this.menuButton.setStyle({ backgroundColor: "#6b238d" });
+        this.menuButton.setScale(1.05);
+      });
+
+      this.input.keyboard.on("keydown-UP", () => {
+        // Move focus back to resume button
+        this.menuButton.setStyle({ backgroundColor: "#22c55e" });
+        this.menuButton.setScale(1);
+
+        this.resumeButton.setStyle({ backgroundColor: "#6b238d" });
+        this.resumeButton.setColor("#FFBF00");
+        this.resumeButton.setScale(1.05);
       });
     }
-    // Add ESC key to resume
-    // this.input.keyboard.once("keydown-ESC", () => {
-    //   this.resumeGame();
-    // });
-    //
 
-    // 5. Update Resume button hover effect in PauseScene
-    resumeButton
-      .setInteractive({ useHandCursor: true })
-      .on("pointerover", () => {
-        resumeButton.setStyle({ backgroundColor: "#6b238d" });
-        resumeButton.setColor("#FFBF00"); // Change text to gold on hover
-        resumeButton.setScale(1.05);
-      })
-      .on("pointerout", () => {
-        resumeButton.setStyle({ backgroundColor: "#22c55e" });
-        resumeButton.setColor("#ffffff"); // Reset color
-        resumeButton.setScale(1);
-      })
-      .on("pointerdown", () => {
-        this.resumeGame();
-      });
+    // To ensure the resume button gets focus even after any repaints
+    this.time.delayedCall(50, () => {
+      if (this.resumeButton) {
+        this.resumeButton.setStyle({ backgroundColor: "#6b238d" });
+        this.resumeButton.setColor("#FFBF00");
+        this.resumeButton.setScale(1.05);
+      }
+    });
   }
+
   private resumeGame(): void {
     this.scene.stop();
     this.scene.resume("GameScene");

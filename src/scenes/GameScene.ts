@@ -164,22 +164,17 @@ export default class GameScene extends Phaser.Scene {
       )
       .setOrigin(0.5);
 
-    // Add score text
-    this.scoreText = this.add
-      .text(width * 0.5, height * this.UI_Y_PERCENT, `Score: ${this.score}`, {
-        fontFamily: "Arial",
-        fontSize: "14px",
-        color: COLORS.NORMAL,
-      })
-      .setOrigin(0.5)
-      .setName("scoreText");
+    // Delay text aligned left
+    const uiFontSize = Math.min(14, Math.floor(width / 80));
 
     // Delay text aligned left
     this.speedText = this.add
       .text(boardX, height * this.UI_Y_PERCENT, `Delay: `, {
         fontFamily: "Arial",
-        fontSize: "14px",
-        color: COLORS.WHITE,
+        fontSize: `${uiFontSize}px`,
+        color: COLORS.NORMAL,
+        backgroundColor: COLORS.BUTTON_BG,
+        padding: { x: 10, y: 5 },
       })
       .setOrigin(0, 0.5);
 
@@ -188,49 +183,89 @@ export default class GameScene extends Phaser.Scene {
     // Speed down button
     this.speedDownBtn = this.add
       .text(
-        boardX + textWidth + width * 0.01, // Small gap after "Delay:"
+        boardX + textWidth + width * 0.005, // Small gap after "Delay:"
         height * this.UI_Y_PERCENT,
         "◀",
         {
           fontFamily: "Arial",
-          fontSize: "14px",
+          fontSize: `${uiFontSize}px`,
+          color: COLORS.NORMAL,
           backgroundColor: COLORS.BUTTON_BG,
-          padding: { x: 3, y: 2 },
+          padding: { x: 10, y: 5 },
         }
       )
-      .setOrigin(0.5)
+      .setOrigin(0, 0.5)
       .setInteractive({ useHandCursor: true })
-      .on("pointerdown", () => this.changeSpeed(-20));
+      .on("pointerdown", () => {
+        this.changeSpeed(-20);
+        this.speedDownBtn.setBackgroundColor("0x007700"); // Darker green when pressed
+      })
+      .on("pointerup", () => {
+        this.speedDownBtn.setBackgroundColor(COLORS.BUTTON_BG); // Back to normal
+      })
+      .on("pointerout", () => {
+        this.speedDownBtn.setBackgroundColor(COLORS.BUTTON_BG); // Back to normal if pointer moves out
+      });
 
-    // Speed up button
+    // Speed up button right next to speed down button
     this.speedUpBtn = this.add
       .text(
-        boardX + textWidth + width * 0.09, // Space after value
+        boardX + textWidth + this.speedDownBtn.width + width * 0.005, // Minimal gap after speed down button
         height * this.UI_Y_PERCENT,
         "▶",
         {
           fontFamily: "Arial",
-          fontSize: "14px",
+          fontSize: `${uiFontSize}px`,
+          color: COLORS.NORMAL,
           backgroundColor: COLORS.BUTTON_BG,
-          padding: { x: 3, y: 2 },
+          padding: { x: 10, y: 5 },
         }
       )
-      .setOrigin(0.5)
+      .setOrigin(0, 0.5)
       .setInteractive({ useHandCursor: true })
-      .on("pointerdown", () => this.changeSpeed(+20));
+      .on("pointerdown", () => {
+        this.changeSpeed(+20);
+        this.speedUpBtn.setBackgroundColor("0x007700"); // Darker green when pressed
+      })
+      .on("pointerup", () => {
+        this.speedUpBtn.setBackgroundColor(COLORS.BUTTON_BG); // Back to normal
+      })
+      .on("pointerout", () => {
+        this.speedUpBtn.setBackgroundColor(COLORS.BUTTON_BG); // Back to normal if pointer moves out
+      });
 
-    // Set up pause button text (right aligned)
+    this.scoreText = this.add
+      .text(width * 0.5, height * this.UI_Y_PERCENT, `Score: ${this.score}`, {
+        fontFamily: "Arial",
+        fontSize: `${uiFontSize}px`,
+        color: COLORS.NORMAL,
+        backgroundColor: COLORS.BUTTON_BG,
+        padding: { x: 10, y: 5 },
+      })
+      .setOrigin(0.5)
+      .setName("scoreText");
+
+    // Set up pause button text (right aligned) - match font size with other UI elements
     const pauseButton = this.add
       .text(boardX + boardWidth, height * this.UI_Y_PERCENT, "Pause", {
         fontFamily: "Arial",
-        fontSize: "14px",
+        fontSize: `${uiFontSize}px`,
         color: COLORS.NORMAL,
         backgroundColor: COLORS.BUTTON_BG,
         padding: { x: 10, y: 5 },
       })
       .setOrigin(1, 0.5)
       .setInteractive({ useHandCursor: true })
-      .on("pointerdown", () => this.togglePause())
+      .on("pointerdown", () => {
+        this.togglePause();
+        pauseButton.setBackgroundColor("0x007700"); // Darker green when pressed
+      })
+      .on("pointerup", () => {
+        pauseButton.setBackgroundColor(COLORS.BUTTON_BG); // Back to normal
+      })
+      .on("pointerout", () => {
+        pauseButton.setBackgroundColor(COLORS.BUTTON_BG); // Back to normal if pointer moves out
+      })
       .setName("pauseButton");
 
     // Generate initial food
@@ -296,22 +331,9 @@ export default class GameScene extends Phaser.Scene {
         this.sys.game.device.input.touch ||
         window.innerWidth < 800;
 
-      // if (this.isMobile) {
-      // // Add mobile indicator
-      // const mobileIcon = this.add
-      //   .text(width * 0.02, height * 0.02, "📱", {
-      //     fontSize: "24px",
-      //   })
-      //   .setOrigin(0, 0);
-
-      // Set up mobile controls (this will add the directional buttons)
-      //   this.setupMobileControls();
-      // }
+      this.scale.on("resize", this.resize, this);
+      this.resize();
     }
-
-    // Add resize listener
-    this.scale.on("resize", this.resize, this);
-    this.resize();
   }
 
   //========== 3. Set up mobile controls
@@ -352,9 +374,6 @@ export default class GameScene extends Phaser.Scene {
         }
       });
     });
-
-    // Setup directional buttons
-    // this.setupMobileButtons();
   }
 
   private setupMobileButtons(): void {
@@ -364,50 +383,15 @@ export default class GameScene extends Phaser.Scene {
     const boardX = (width - boardWidth) / 2;
     const boardY = height * this.BOARD_Y_PERCENT;
 
-    // Button sizing based on board dimensions
-    const buttonSize = boardWidth * 0.1; // 10% of board width
-    const padding = buttonSize * 0.2; // 20% of button size
+    const buttonSize = boardWidth * 0.1;
+    const padding = buttonSize * 0.2;
 
     // Create container at the bottom-right corner of the game board
     this.controlsContainer = this.add.container(
       boardX + boardWidth - buttonSize * 1.5, // X position (right side)
       boardY + boardHeight - buttonSize * 1.5 // Y position (bottom)
     );
-    // // Calculate board dimensions
-    // // const mobileCellSize = this.cellSize;
-    // const mobileCellSize = this.CELL_SIZE;
-    // const boardHeight = this.GRID_SIZE * mobileCellSize;
-    // const boardY = boardHeight * this.BOARD_Y_PERCENT;
-    // const boardBottom = boardY + boardHeight;
 
-    // const width = this.GRID_SIZE * mobileCellSize;
-    // const height = boardHeight;
-    // const buttonSize = width * 0.04; // Responsive button size
-    // const padding = width * 0.005;
-
-    // console.log(`Cell size mobileCellSize: ${this.cellSize} ${mobileCellSize}`);
-    // console.log(`width height: ${width} ${height}`);
-
-    // // Position the controls at bottom right, aligned with game field bottom
-    // const centerX = width * 0.6;
-
-    // // Calculate centerY accounting for the full height of the control pad
-    // // Total height of controls: buttonSize (UP) + padding + buttonSize (CENTER) + padding + buttonSize (DOWN)
-    // const totalControlHeight = buttonSize * 3 + padding * 2;
-
-    // // We want the center of the control pad to be positioned properly within the game field's visible area
-    // // This ensures the controls don't overlap with the UI elements at the top
-    // // const centerY = boardY + boardHeight / 2;
-    // const centerY = boardHeight / 2;
-    // console.log(
-    //   `[setupMobileButtons] cellSize mobileCellSize centerY boardBottom: ${this.cellSize} ${mobileCellSize} ${centerY} ${boardBottom}`
-    //);
-
-    // Create a container for all button elements
-    // const buttonGroup = this.add.group();
-    //this.buttonGroup = this.add.group
-
-    // Create background for the controls (positions are relative to container)
     const controlsBg = this.add.circle(
       0,
       0, // Center of container
@@ -438,29 +422,6 @@ export default class GameScene extends Phaser.Scene {
         color: COLORS.WHITE,
       })
       .setOrigin(0.5);
-    // const upButton = this.add
-    //   .rectangle(
-    //     //        centerX,
-    //     width,
-    //     centerY - buttonSize - 2 * padding,
-    //     buttonSize,
-    //     buttonSize,
-    //     0x00ff00,
-    //     0.5
-    //   )
-    //   .setInteractive({ useHandCursor: true })
-    //   .setOrigin(0.5)
-    //   .on("pointerdown", () => {
-    //     if (this.direction !== "DOWN") this.nextDirection = "UP";
-    //   });
-    // const upText = this.add
-    //   .text(width, centerY - buttonSize - padding - padding, "↑", {
-    //     fontSize: width * 0.04, // Responsive font size
-    //     color: COLORS.WHITE,
-    //   })
-    //   .setOrigin(0.5);
-    // buttonGroup.add(upButton);
-    // buttonGroup.add(upText);
 
     // DOWN button
     const downButton = this.add
@@ -476,27 +437,6 @@ export default class GameScene extends Phaser.Scene {
         color: COLORS.WHITE,
       })
       .setOrigin(0.5);
-    //   .rectangle(
-    //     width,
-    //     centerY + buttonSize + padding,
-    //     buttonSize,
-    //     buttonSize,
-    //     0x00ff00,
-    //     0.5
-    //   )
-    //   .setInteractive({ useHandCursor: true })
-    //   .setOrigin(0.5)
-    //   .on("pointerdown", () => {
-    //     if (this.direction !== "UP") this.nextDirection = "DOWN";
-    //   });
-    // const downText = this.add
-    //   .text(width, centerY + buttonSize + padding - padding, "↓", {
-    //     fontSize: width * 0.04,
-    //     color: COLORS.WHITE,
-    //   })
-    //   .setOrigin(0.5);
-    // buttonGroup.add(downButton);
-    // buttonGroup.add(downText);
 
     // LEFT button
     const leftButton = this.add
@@ -519,28 +459,6 @@ export default class GameScene extends Phaser.Scene {
         color: COLORS.WHITE,
       })
       .setOrigin(0.5);
-    // const leftButton = this.add
-    //   .rectangle(
-    //     width - buttonSize - padding,
-    //     centerY,
-    //     buttonSize,
-    //     buttonSize,
-    //     0x00ff00,
-    //     0.5
-    //   )
-    //   .setInteractive({ useHandCursor: true })
-    //   .setOrigin(0.5)
-    //   .on("pointerdown", () => {
-    //     if (this.direction !== "RIGHT") this.nextDirection = "LEFT";
-    //   });
-    // const leftText = this.add
-    //   .text(width - buttonSize - padding, centerY - padding, "←", {
-    //     fontSize: width * 0.04,
-    //     color: COLORS.WHITE,
-    //   })
-    //   .setOrigin(0.5);
-    // buttonGroup.add(leftButton);
-    // buttonGroup.add(leftText);
 
     // RIGHT button
     const rightButton = this.add
@@ -556,28 +474,6 @@ export default class GameScene extends Phaser.Scene {
         color: COLORS.WHITE,
       })
       .setOrigin(0.5);
-    // const rightButton = this.add
-    //   .rectangle(
-    //     width + buttonSize + padding,
-    //     centerY,
-    //     buttonSize,
-    //     buttonSize,
-    //     0x00ff00,
-    //     0.5
-    //   )
-    //   .setInteractive({ useHandCursor: true })
-    //   .setOrigin(0.5)
-    //   .on("pointerdown", () => {
-    //     if (this.direction !== "LEFT") this.nextDirection = "RIGHT";
-    //   });
-    // const rightText = this.add
-    //   .text(width + buttonSize + padding, centerY - padding, "→", {
-    //     fontSize: width * 0.04,
-    //     color: COLORS.WHITE,
-    //   })
-    //   .setOrigin(0.5);
-    // buttonGroup.add(rightButton);
-    // buttonGroup.add(rightText);
 
     // Add all elements to the container
     this.controlsContainer.add([
@@ -618,8 +514,8 @@ export default class GameScene extends Phaser.Scene {
     // Set container visibility (show for mobile, hide for desktop)
     if (this.controlsContainer) {
       // For testing - visible for all devices
-      this.controlsContainer.setVisible(true);
-      // this.controlsContainer.setVisible(this.isMobile);
+      // this.controlsContainer.setVisible(true);
+      this.controlsContainer.setVisible(this.isMobile);
     }
   }
 
@@ -650,32 +546,37 @@ export default class GameScene extends Phaser.Scene {
 
     if (this.scoreText) {
       this.scoreText.setPosition(width * 0.5, height * this.UI_Y_PERCENT);
-      this.scoreText.setFontSize(Math.max(12, Math.floor(width / 40)));
+      this.scoreText.setFontSize(Math.max(12, Math.floor(width / 100)));
     }
 
     if (this.speedText) {
       this.speedText.setPosition(boardX, height * this.UI_Y_PERCENT);
-      this.speedText.setFontSize(Math.max(12, Math.floor(width / 40)));
+      this.speedText.setFontSize(Math.max(12, Math.floor(width / 100)));
       const textWidth = this.speedText.width;
 
       if (this.speedDownBtn) {
         this.speedDownBtn.setPosition(
-          boardX + textWidth + width * 0.01,
+          boardX + textWidth + width * 0.005,
           height * this.UI_Y_PERCENT
         );
-        this.speedDownBtn.setFontSize(Math.max(12, Math.floor(width / 40)));
+        this.speedDownBtn.setFontSize(Math.max(12, Math.floor(width / 100)));
+
+        if (this.speedUpBtn) {
+          this.speedUpBtn.setPosition(
+            boardX + textWidth + this.speedDownBtn.width + width * 0.005,
+            height * this.UI_Y_PERCENT
+          );
+          this.speedUpBtn.setFontSize(Math.max(12, Math.floor(width / 100)));
+        }
       }
 
-      if (this.speedUpBtn) {
-        this.speedUpBtn.setPosition(
-          boardX + textWidth + width * 0.09,
-          height * this.UI_Y_PERCENT
-        );
-        this.speedUpBtn.setFontSize(Math.max(12, Math.floor(width / 40)));
+      if (this.scoreText) {
+        this.scoreText.setPosition(width * 0.5, height * this.UI_Y_PERCENT);
+        this.scoreText.setFontSize(Math.max(12, Math.floor(width / 100)));
       }
       // Update mobile controls container position if it exists
-      //    if (this.controlsContainer) {
-      if (this.isMobile && this.controlsContainer) {
+      if (this.controlsContainer) {
+        //if (this.isMobile && this.controlsContainer) {
         const boardWidth = this.GRID_SIZE * this.cellSize;
         const boardHeight = this.GRID_SIZE * this.cellSize;
         const boardX = (width - boardWidth) / 2;
@@ -1207,8 +1108,8 @@ export default class GameScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const boardX = (width - this.GRID_SIZE * this.cellSize) / 2;
     const boardY = height * this.BOARD_Y_PERCENT;
-    const centerX = (boardX + x * this.cellSize + this.cellSize / 2) * 0.8;
-    const centerY = (boardY + y * this.cellSize + this.cellSize / 2) * 0.8;
+    const centerX = boardX + x * this.cellSize + this.cellSize / 2; // * 0.8;
+    const centerY = boardY + y * this.cellSize + this.cellSize / 2; // * 0.8;
 
     // Create explosion center
     const explosion = this.add.circle(

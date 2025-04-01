@@ -6,6 +6,7 @@ export default class GameOverScene extends Phaser.Scene {
   private playAgainButton!: Phaser.GameObjects.Text;
   private settingsButton!: Phaser.GameObjects.Text;
   private selectedButton: number = 0; // 0 = Play Again, 1 = Settings
+  private isMobile: boolean = false;
 
   constructor() {
     super({ key: "GameOverScene" });
@@ -16,37 +17,59 @@ export default class GameOverScene extends Phaser.Scene {
     this.score = this.registry.get("score") || 0;
     // Always start with Play Again selected
     this.selectedButton = 0;
+
+    // Detect if we're on a mobile device
+    this.isMobile =
+      !this.sys.game.device.os.desktop ||
+      this.sys.game.device.input.touch ||
+      window.innerWidth < 800;
   }
 
   create() {
     const { width, height } = this.scale;
 
+    // Calculate responsive font sizes
+    const titleSize = this.isMobile
+      ? Math.min(32, Math.floor(width / 15))
+      : "48px";
+
+    const scoreSize = this.isMobile
+      ? Math.min(24, Math.floor(width / 20))
+      : "36px";
+
+    const buttonSize = this.isMobile
+      ? Math.min(20, Math.floor(width / 25))
+      : "30px";
+
     // Add game over title
     this.add
       .text(width / 2, height / 3, "GAME OVER!", {
         fontFamily: "Arial",
-        fontSize: "36px",
+        fontSize: titleSize,
         color: COLORS.WHITE,
       })
       .setOrigin(0.5);
 
     // Add score text
     this.add
-      .text(width / 2, height * 0.45, `Your final score: ${this.score}`, {
+      .text(width / 2, height * 0.4, `Your final score: ${this.score}`, {
         fontFamily: "Arial",
-        fontSize: "28px",
+        fontSize: scoreSize,
         color: COLORS.WHITE,
       })
       .setOrigin(0.5);
 
+    // Calculate button padding based on screen size
+    const buttonPadding = this.isMobile ? { x: 15, y: 8 } : { x: 20, y: 10 };
+
     // Play again button
     this.playAgainButton = this.add
-      .text(width / 2, height * 0.65, "Play Again", {
+      .text(width / 2, height * 0.5, "Play Again", {
         fontFamily: "Arial",
-        fontSize: "20px",
+        fontSize: buttonSize,
         color: COLORS.WHITE,
         backgroundColor: COLORS.BUTTON_HOVER_BG, // Start with highlighted color
-        padding: { x: 20, y: 10 },
+        padding: buttonPadding,
       })
       .setOrigin(0.5)
       .setScale(1.05); // Start slightly scaled up to show focus
@@ -63,15 +86,14 @@ export default class GameOverScene extends Phaser.Scene {
 
     // Settings button
     this.settingsButton = this.add
-      .text(width / 2, height * 0.8, "Settings", {
+      .text(width / 2, height * 0.6, "Settings", {
         fontFamily: "Arial",
-        fontSize: "20x",
+        fontSize: buttonSize,
         color: COLORS.WHITE,
         backgroundColor: COLORS.BUTTON_BG, // Normal color
-        padding: { x: 20, y: 10 },
+        padding: buttonPadding,
       })
-      .setOrigin(0.5)
-      .setScale(1.05);
+      .setOrigin(0.5);
 
     this.settingsButton
       .setInteractive({ useHandCursor: true })
@@ -117,15 +139,89 @@ export default class GameOverScene extends Phaser.Scene {
 
     // Initial focus setup - Play Again is focused by default
     this.updateButtonFocus();
+
+    // Add resize handler
+    this.scale.on("resize", this.resize, this);
+    this.resize();
+  }
+
+  private resize(): void {
+    const { width, height } = this.scale;
+
+    // Update mobile detection
+    this.isMobile =
+      !this.sys.game.device.os.desktop ||
+      this.sys.game.device.input.touch ||
+      window.innerWidth < 800;
+
+    // Calculate responsive font sizes again
+    const titleSize = this.isMobile
+      ? Math.min(32, Math.floor(width / 15))
+      : "48px";
+
+    const scoreSize = this.isMobile
+      ? Math.min(24, Math.floor(width / 20))
+      : "36px";
+
+    const buttonSize = this.isMobile
+      ? Math.min(20, Math.floor(width / 25))
+      : "30px";
+
+    // Recalculate button padding based on screen size
+    const buttonPadding = this.isMobile ? { x: 15, y: 8 } : { x: 20, y: 10 };
+
+    // Get and update title text
+    const titleText = this.children.list.find(
+      (child) =>
+        child instanceof Phaser.GameObjects.Text &&
+        (child as Phaser.GameObjects.Text).text === "GAME OVER!"
+    ) as Phaser.GameObjects.Text;
+
+    if (titleText) {
+      titleText.setPosition(width / 2, height / 3);
+      titleText.setFontSize(titleSize);
+    }
+
+    // Get and update score text
+    const scoreText = this.children.list.find(
+      (child) =>
+        child instanceof Phaser.GameObjects.Text &&
+        (child as Phaser.GameObjects.Text).text.includes("Your final score")
+    ) as Phaser.GameObjects.Text;
+
+    if (scoreText) {
+      scoreText.setPosition(width / 2, height * 0.4);
+      scoreText.setFontSize(scoreSize);
+    }
+
+    // Update Play Again button
+    if (this.playAgainButton) {
+      this.playAgainButton.setPosition(width / 2, height * 0.5);
+      this.playAgainButton.setFontSize(buttonSize);
+      this.playAgainButton.setPadding(buttonPadding);
+    }
+
+    // Update Settings button
+    if (this.settingsButton) {
+      this.settingsButton.setPosition(width / 2, height * 0.6);
+      this.settingsButton.setFontSize(buttonSize);
+      this.settingsButton.setPadding(buttonPadding);
+    }
+
+    // Make sure focus is correctly shown
+    this.updateButtonFocus();
   }
 
   private updateButtonFocus(): void {
+    // Calculate scale factor based on device
+    const focusScale = this.isMobile ? 1.03 : 1.05;
+
     // Update Play Again button
     if (this.selectedButton === 0) {
       this.playAgainButton.setStyle({
         backgroundColor: COLORS.BUTTON_HOVER_BG,
       });
-      this.playAgainButton.setScale(1.05);
+      this.playAgainButton.setScale(focusScale);
     } else {
       this.playAgainButton.setStyle({ backgroundColor: COLORS.BUTTON_BG });
       this.playAgainButton.setScale(1);
@@ -134,7 +230,7 @@ export default class GameOverScene extends Phaser.Scene {
     // Update Settings button
     if (this.selectedButton === 1) {
       this.settingsButton.setStyle({ backgroundColor: COLORS.BUTTON_HOVER_BG });
-      this.settingsButton.setScale(1.05);
+      this.settingsButton.setScale(focusScale);
     } else {
       this.settingsButton.setStyle({ backgroundColor: COLORS.BUTTON_BG });
       this.settingsButton.setScale(1);
