@@ -162,12 +162,12 @@ export default class GameOverScene extends Phaser.Scene {
     //   ? Math.min(32, Math.floor(width / 15))
     //   : "48px";
 
-    const scoreSize = 42;
+    const scoreSize = 40;
     // const scoreSize = this.isMobile
     //   ? Math.min(24, Math.floor(width / 20))
     //   : "36px";
 
-    const buttonSize = 40;
+    const buttonSize = 36;
     // const buttonSize = this.isMobile
     //   ? Math.min(20, Math.floor(width / 25))
     //   : "30px";
@@ -183,7 +183,7 @@ export default class GameOverScene extends Phaser.Scene {
     ) as Phaser.GameObjects.Text;
 
     if (titleText) {
-      titleText.setPosition(width / 2, height / 3);
+      titleText.setPosition(width / 2, height / 25);
       titleText.setFontSize(titleSize);
     }
 
@@ -195,7 +195,7 @@ export default class GameOverScene extends Phaser.Scene {
     ) as Phaser.GameObjects.Text;
 
     if (scoreText) {
-      scoreText.setPosition(width / 2, height * 0.4);
+      scoreText.setPosition(width / 2, height * 0.38);
       scoreText.setFontSize(scoreSize);
     }
 
@@ -208,7 +208,7 @@ export default class GameOverScene extends Phaser.Scene {
 
     // Update Settings button
     if (this.settingsButton) {
-      this.settingsButton.setPosition(width / 2, height * 0.6);
+      this.settingsButton.setPosition(width / 2, height * 0.73);
       this.settingsButton.setFontSize(buttonSize);
       this.settingsButton.setPadding(buttonPadding);
     }

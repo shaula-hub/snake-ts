@@ -170,7 +170,8 @@ export default class GameScene extends Phaser.Scene {
     // Speed down button
     this.speedDownBtn = this.add
       .text(
-        boardX + width * 0.005, // Small gap after "Delay:"
+        boardX + this.speedDownBtn.width + width * 0.015,
+        // boardX + width * 0.005, // Small gap after "Delay:"
         height * this.UI_Y_PERCENT,
         "▶",
         {
@@ -196,18 +197,13 @@ export default class GameScene extends Phaser.Scene {
 
     // Speed up button right next to speed down button
     this.speedUpBtn = this.add
-      .text(
-        boardX + this.speedDownBtn.width + width * 0.015, // Minimal gap after speed down button
-        height * this.UI_Y_PERCENT,
-        "◀",
-        {
-          fontFamily: "Arial",
-          fontSize: `${uiFontSize}px`,
-          color: COLORS.NORMAL,
-          backgroundColor: COLORS.BUTTON_BG,
-          padding: { x: 10, y: 5 },
-        }
-      )
+      .text(boardX + width * 0.005, height * this.UI_Y_PERCENT, "◀", {
+        fontFamily: "Arial",
+        fontSize: `${uiFontSize}px`,
+        color: COLORS.NORMAL,
+        backgroundColor: COLORS.BUTTON_BG,
+        padding: { x: 10, y: 5 },
+      })
       .setOrigin(0, 0.5)
       .setInteractive({ useHandCursor: true })
       .on("pointerdown", () => {
