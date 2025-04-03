@@ -10,13 +10,13 @@ export default class GameScene extends Phaser.Scene {
   private readonly MIN_SPEED = 80;
   private readonly MAX_SPEED = 500;
   private readonly DEFAULT_SPEED = 180;
-  private readonly GRID_SIZE = 25;
+  private readonly GRID_SIZE = 20;
   private readonly CELL_SIZE = 20;
 
   // Positioning constants (percentages)
   private readonly BOARD_Y_PERCENT = 0.25; // Board Y position as percentage of screen height
   private readonly TITLE_Y_PERCENT = 0.1; // Title Y position
-  private readonly UI_Y_PERCENT = 0.18; // UI elements Y position
+  private readonly UI_Y_PERCENT = 0.2; // UI elements Y position
 
   private cellSize = 20;
 
@@ -100,7 +100,7 @@ export default class GameScene extends Phaser.Scene {
     this.load.image("tail_left", "images/tail_left.png");
     this.load.image("tail_right", "images/tail_right.png");
 
-    this.load.image("game-background", "images/game-background.jpg");
+    this.load.image("game-background", "images/game-background.png");
   }
 
   private readonly SNAKE_HEADS = {
@@ -163,7 +163,7 @@ export default class GameScene extends Phaser.Scene {
       )
       .setOrigin(0.5);
 
-    const uiFontSize = Math.min(24, Math.floor(width / 40));
+    const uiFontSize = Math.min(16, Math.floor(width / 50));
 
     // Speed up button right next to speed down button
     this.speedUpBtn = this.add
@@ -442,8 +442,8 @@ export default class GameScene extends Phaser.Scene {
 
     // Create container at the bottom-right corner of the game board
     this.controlsContainer = this.add.container(
-      boardX + boardWidth - buttonSize * 1.6,
-      boardY + boardHeight - buttonSize * 1.6
+      (boardX + boardWidth - buttonSize * 1.6) * 0.9,
+      (boardY + boardHeight - buttonSize * 1.6) * 0.9
     );
 
     // Larger background circle
@@ -463,7 +463,7 @@ export default class GameScene extends Phaser.Scene {
         -buttonSize - padding,
         buttonSize,
         buttonSize,
-        0x00ff00,
+        0x558eda,
         0.5
       )
       .setInteractive({ useHandCursor: true })
@@ -474,14 +474,14 @@ export default class GameScene extends Phaser.Scene {
     // Larger text
     const upText = this.add
       .text(0, -buttonSize - padding, "↑", {
-        fontSize: buttonSize * 0.7, // Larger text
+        fontSize: buttonSize * 2.0, // Larger text
         color: "#FFFFFF",
       })
       .setOrigin(0.5);
 
     // DOWN button (similar changes for other buttons)
     const downButton = this.add
-      .rectangle(0, buttonSize + padding, buttonSize, buttonSize, 0x00ff00, 0.5)
+      .rectangle(0, buttonSize + padding, buttonSize, buttonSize, 0x558eda, 0.5)
       .setInteractive({ useHandCursor: true })
       .on("pointerdown", () => {
         if (this.direction !== "UP") this.nextDirection = "DOWN";
@@ -489,7 +489,7 @@ export default class GameScene extends Phaser.Scene {
 
     const downText = this.add
       .text(0, buttonSize + padding, "↓", {
-        fontSize: buttonSize * 0.7,
+        fontSize: buttonSize * 2.0,
         color: "#FFFFFF",
       })
       .setOrigin(0.5);
@@ -501,7 +501,7 @@ export default class GameScene extends Phaser.Scene {
         0,
         buttonSize,
         buttonSize,
-        0x00ff00,
+        0x558eda,
         0.5
       )
       .setInteractive({ useHandCursor: true })
@@ -511,7 +511,7 @@ export default class GameScene extends Phaser.Scene {
 
     const leftText = this.add
       .text(-buttonSize - padding, 0, "←", {
-        fontSize: buttonSize * 0.7,
+        fontSize: buttonSize * 2.0,
         color: "#FFFFFF",
       })
       .setOrigin(0.5);
@@ -523,7 +523,7 @@ export default class GameScene extends Phaser.Scene {
         0,
         buttonSize,
         buttonSize,
-        0x00ff00,
+        0x558eda,
         0.5
       )
       .setInteractive({ useHandCursor: true })
@@ -533,7 +533,7 @@ export default class GameScene extends Phaser.Scene {
 
     const rightText = this.add
       .text(buttonSize + padding + 20, 0, "→", {
-        fontSize: buttonSize * 0.7,
+        fontSize: buttonSize * 2.0,
         color: "#FFFFFF",
       })
       .setOrigin(0.5);
@@ -556,15 +556,15 @@ export default class GameScene extends Phaser.Scene {
         button.setFillStyle(0x00aa00, 0.7); // Darker green when pressed
       });
       button.on("pointerup", () => {
-        button.setFillStyle(0x00ff00, 0.5); // Back to normal
+        button.setFillStyle(0x558eda, 0.5); // Back to normal
       });
       button.on("pointerout", () => {
-        button.setFillStyle(0x00ff00, 0.5); // Back to normal if pointer moves out
+        button.setFillStyle(0x558eda, 0.5); // Back to normal if pointer moves out
       });
     });
 
     // Make directional buttons more visible
-    this.controlsContainer.setAlpha(0.6); // Opacity
+    this.controlsContainer.setAlpha(0.2); // Opacity
   }
 
   private updateControlsVisibility(): void {
@@ -593,7 +593,7 @@ export default class GameScene extends Phaser.Scene {
 
     // Calculate responsive grid size
     this.cellSize = Math.floor(Math.min(width / 45, height / 45) * 1.0);
-    let speedPauseFontSize = Math.max(12, Math.floor(width / 50));
+    let speedPauseFontSize = Math.max(36, Math.floor(width / 50));
 
     let boardWidth = this.GRID_SIZE * this.cellSize;
 
@@ -661,11 +661,11 @@ export default class GameScene extends Phaser.Scene {
       if (this.controlsContainer) {
         //if (this.isMobile && this.controlsContainer) {
         const buttonSize = boardWidth * 0.18;
-        const padding = buttonSize * 0.2;
+        const padding = 0; //buttonSize * 0.2;
 
         this.controlsContainer.setPosition(
-          boardX + boardWidth - buttonSize * 1.6,
-          boardY + boardHeight - buttonSize * 1.6
+          (boardX + boardWidth - buttonSize * 1.6) * 0.9,
+          (boardY + boardHeight - buttonSize * 1.6) * 0.9
         );
 
         if (this.controlsContainer.length > 0) {
@@ -695,8 +695,8 @@ export default class GameScene extends Phaser.Scene {
             ) as Phaser.GameObjects.Text;
             if (upText) {
               // Make text larger
-              upText.setFontSize(buttonSize * 0.7);
-              upText.setPosition(0, -buttonSize - padding);
+              upText.setFontSize(buttonSize * 1.2);
+              upText.setPosition(0, -buttonSize - padding - 16);
             }
 
             // DOWN button
@@ -712,8 +712,8 @@ export default class GameScene extends Phaser.Scene {
               4
             ) as Phaser.GameObjects.Text;
             if (downText) {
-              downText.setFontSize(buttonSize * 0.7);
-              downText.setPosition(0, buttonSize + padding);
+              downText.setFontSize(buttonSize * 1.2);
+              downText.setPosition(0, buttonSize + padding - 16);
             }
 
             // LEFT button
@@ -729,8 +729,8 @@ export default class GameScene extends Phaser.Scene {
               6
             ) as Phaser.GameObjects.Text;
             if (leftText) {
-              leftText.setFontSize(buttonSize * 0.7);
-              leftText.setPosition(-buttonSize - padding, 0);
+              leftText.setFontSize(buttonSize * 1.2);
+              leftText.setPosition(-buttonSize - padding, -10);
             }
 
             // RIGHT button
@@ -746,13 +746,13 @@ export default class GameScene extends Phaser.Scene {
               8
             ) as Phaser.GameObjects.Text;
             if (rightText) {
-              rightText.setFontSize(buttonSize * 0.7);
-              rightText.setPosition(buttonSize + padding, 0);
+              rightText.setFontSize(buttonSize * 1.2);
+              rightText.setPosition(buttonSize + padding, -10);
             }
           }
         }
         this.updateControlsVisibility();
-        this.controlsContainer.setAlpha(0.6); // Opacity
+        this.controlsContainer.setAlpha(0.2); // Opacity
       }
 
       this.updateSnakeGraphics();
@@ -1197,8 +1197,8 @@ export default class GameScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const boardX = (width - this.GRID_SIZE * this.cellSize) / 2;
     const boardY = height * this.BOARD_Y_PERCENT;
-    const centerX = boardX + x * this.cellSize + this.cellSize / 2; // * 0.8;
-    const centerY = boardY + y * this.cellSize + this.cellSize / 2; // * 0.8;
+    const centerX = boardX + x * this.cellSize + this.cellSize / 2;
+    const centerY = boardY + y * this.cellSize + this.cellSize / 2;
 
     // Create explosion center
     const explosion = this.add.circle(

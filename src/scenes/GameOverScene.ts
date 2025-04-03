@@ -173,7 +173,7 @@ export default class GameOverScene extends Phaser.Scene {
     //   : "30px";
 
     // Recalculate button padding based on screen size
-    const buttonPadding = this.isMobile ? { x: 3, y: 2 } : { x: 20, y: 10 };
+    const buttonPadding = this.isMobile ? { x: 15, y: 8 } : { x: 20, y: 10 };
 
     // Get and update title text
     const titleText = this.children.list.find(
