@@ -610,6 +610,7 @@ export default class GameScene extends Phaser.Scene {
           if (controlsBg && typeof controlsBg.setRadius === "function") {
             // Make background larger to fit the larger buttons
             controlsBg.setRadius(buttonSize * 2.2);
+            controlsBg.setAlpha(0.2);
           }
 
           // Update directional buttons and text with larger sizes
