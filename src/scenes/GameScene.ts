@@ -363,10 +363,7 @@ export default class GameScene extends Phaser.Scene {
     let isProcessingSwipe = false;
 
     // Adaptive swipe threshold based on screen size
-    const swipeThreshold = Math.max(
-      30,
-      Math.min(this.scale.width, this.scale.height) * 0.05
-    );
+    const swipeThreshold = 30; //Math.max(30,Math.min(this.scale.width, this.scale.height) * 0.05 );
 
     // On pointer down, record the start position
     swipeArea.on("pointerdown", (pointer) => {
