@@ -208,7 +208,7 @@ export default class GameOverScene extends Phaser.Scene {
 
     // Update Settings button
     if (this.settingsButton) {
-      this.settingsButton.setPosition(width / 2, height * 0.66);
+      this.settingsButton.setPosition(width / 2, height * 0.67);
       this.settingsButton.setFontSize(buttonSize);
       this.settingsButton.setPadding(buttonPadding);
     }

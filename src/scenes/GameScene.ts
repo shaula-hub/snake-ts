@@ -118,10 +118,11 @@ export default class GameScene extends Phaser.Scene {
     this.foodItems = [];
 
     this.speed = this.registry.get("lastSpeed") || this.DEFAULT_SPEED;
-    this.gameType =
-      this.registry.get("lastGameType") ||
-      this.registry.get("gameType") ||
-      "classic";
+    let selectedGameType = this.registry.get("gameType");
+    if (!selectedGameType) {
+      selectedGameType = this.registry.get("lastGameType");
+    }
+    this.gameType = selectedGameType || "classic";
 
     // Initial direction is randomly chosen
     const directions = ["UP", "DOWN", "LEFT", "RIGHT"];
@@ -323,26 +324,30 @@ export default class GameScene extends Phaser.Scene {
 
   //========== SWIPE processing
   private setupTouchPrevention(): void {
-    // Get the canvas element
-    const canvas = this.sys.game.canvas;
+    try {
+      // Get the canvas element
+      const canvas = this.sys.game.canvas;
 
-    // Prevent default touchmove behavior to stop screen scrolling/bouncing
-    canvas.addEventListener(
-      "touchmove",
-      function (e) {
-        e.preventDefault();
-      },
-      { passive: false }
-    );
+      // Prevent default touchmove behavior to stop screen scrolling/bouncing
+      canvas.addEventListener(
+        "touchmove",
+        function (e) {
+          e.preventDefault();
+        },
+        { passive: false }
+      );
 
-    // Also prevent touchstart default behavior
-    canvas.addEventListener(
-      "touchstart",
-      function (e) {
-        e.preventDefault();
-      },
-      { passive: false }
-    );
+      // Also prevent touchstart default behavior
+      canvas.addEventListener(
+        "touchstart",
+        function (e) {
+          e.preventDefault();
+        },
+        { passive: false }
+      );
+    } catch (error) {
+      console.warn("Could not set up touch prevention:", error);
+    }
   }
 
   private setupSwipeArea(): void {
@@ -352,140 +357,52 @@ export default class GameScene extends Phaser.Scene {
       .setOrigin(0)
       .setInteractive();
 
-    // Improved swipe logic with better thresholds and feedback
+    // Simplified swipe logic with better parameters
     let startX = 0;
     let startY = 0;
     let isProcessingSwipe = false;
 
     // Adaptive swipe threshold based on screen size
-    const getSwipeThreshold = () => {
-      // Smaller threshold for smaller screens, larger for bigger screens
-      const baseThreshold =
-        Math.min(this.scale.width, this.scale.height) * 0.05;
-      return Math.max(20, Math.min(baseThreshold, 50)); // Between 20 and 50 pixels
-    };
-
-    // Visual feedback for swipe (optional)
-    const swipeFeedback = this.add.graphics();
-    swipeFeedback.setVisible(false);
-
-    // Show swipe direction feedback
-    const showDirectionFeedback = (direction) => {
-      swipeFeedback.clear();
-
-      if (!this.isMobile) return; // Only show feedback on mobile
-
-      const { width, height } = this.scale;
-      const centerX = width / 2;
-      const centerY = height / 2;
-      const size = Math.min(width, height) * 0.1; // 10% of screen size
-
-      swipeFeedback.fillStyle(0xffffff, 0.2);
-
-      // Draw direction indicator
-      if (direction === "UP") {
-        swipeFeedback.fillTriangle(
-          centerX,
-          centerY - size,
-          centerX - size / 2,
-          centerY,
-          centerX + size / 2,
-          centerY
-        );
-      } else if (direction === "DOWN") {
-        swipeFeedback.fillTriangle(
-          centerX,
-          centerY + size,
-          centerX - size / 2,
-          centerY,
-          centerX + size / 2,
-          centerY
-        );
-      } else if (direction === "LEFT") {
-        swipeFeedback.fillTriangle(
-          centerX - size,
-          centerY,
-          centerX,
-          centerY - size / 2,
-          centerX,
-          centerY + size / 2
-        );
-      } else if (direction === "RIGHT") {
-        swipeFeedback.fillTriangle(
-          centerX + size,
-          centerY,
-          centerX,
-          centerY - size / 2,
-          centerX,
-          centerY + size / 2
-        );
-      }
-
-      swipeFeedback.setVisible(true);
-
-      // Hide feedback after a short delay
-      this.time.delayedCall(150, () => {
-        swipeFeedback.setVisible(false);
-      });
-    };
+    const swipeThreshold = Math.max(
+      30,
+      Math.min(this.scale.width, this.scale.height) * 0.05
+    );
 
     // On pointer down, record the start position
     swipeArea.on("pointerdown", (pointer) => {
-      if (!isProcessingSwipe) {
-        startX = pointer.x;
-        startY = pointer.y;
-        isProcessingSwipe = false;
-      }
+      startX = pointer.x;
+      startY = pointer.y;
+      isProcessingSwipe = false;
     });
 
-    // Track pointer move for early swipe detection
+    // Track pointer move for swipe detection
     swipeArea.on("pointermove", (pointer) => {
       // Only process if we have valid start position and not already processed
       if (startX !== 0 && startY !== 0 && !isProcessingSwipe) {
-        const currentX = pointer.x;
-        const currentY = pointer.y;
-
-        const swipeX = currentX - startX;
-        const swipeY = currentY - startY;
-        const swipeThreshold = getSwipeThreshold();
-
-        // Calculate distance of swipe to detect shorter swipes more accurately
-        const swipeDistance = Math.sqrt(swipeX * swipeX + swipeY * swipeY);
+        const swipeX = pointer.x - startX;
+        const swipeY = pointer.y - startY;
 
         // Process if swipe is significant enough
-        if (swipeDistance > swipeThreshold) {
+        if (
+          Math.abs(swipeX) > swipeThreshold ||
+          Math.abs(swipeY) > swipeThreshold
+        ) {
           isProcessingSwipe = true;
 
-          // Calculate swipe angle for more precise direction detection
-          const swipeAngle = (Math.atan2(swipeY, swipeX) * 180) / Math.PI;
-
-          // Determine swipe direction based on angle
-          if (swipeAngle > -45 && swipeAngle <= 45) {
-            // Right swipe
-            if (this.direction !== "LEFT") {
-              this.nextDirection = "RIGHT";
-              showDirectionFeedback("RIGHT");
+          // Determine swipe direction based on which axis has larger movement
+          if (Math.abs(swipeX) > Math.abs(swipeY)) {
+            // Horizontal swipe
+            if (swipeX > 0) {
+              if (this.direction !== "LEFT") this.nextDirection = "RIGHT";
+            } else {
+              if (this.direction !== "RIGHT") this.nextDirection = "LEFT";
             }
-          } else if (swipeAngle > 45 && swipeAngle <= 135) {
-            // Down swipe
-            if (this.direction !== "UP") {
-              this.nextDirection = "DOWN";
-              showDirectionFeedback("DOWN");
-            }
-          } else if (
-            (swipeAngle > 135 && swipeAngle <= 180) ||
-            (swipeAngle >= -180 && swipeAngle <= -135)
-          ) {
-            // Left swipe
-            if (this.direction !== "RIGHT") {
-              this.nextDirection = "LEFT";
-              showDirectionFeedback("LEFT");
-            }
-          } else if (swipeAngle > -135 && swipeAngle <= -45) {
-            // Up swipe
-            if (this.direction !== "DOWN") {
-              this.nextDirection = "UP";
-              showDirectionFeedback("UP");
+          } else {
+            // Vertical swipe
+            if (swipeY > 0) {
+              if (this.direction !== "UP") this.nextDirection = "DOWN";
+            } else {
+              if (this.direction !== "DOWN") this.nextDirection = "UP";
             }
           }
         }
@@ -682,7 +599,7 @@ export default class GameScene extends Phaser.Scene {
 
     // Calculate responsive grid size
     this.cellSize = Math.floor(Math.min(width / 45, height / 45) * 1.0);
-    let speedPauseFontSize = Math.max(32, Math.floor(width / 50));
+    let speedPauseFontSize = Math.max(28, Math.floor(width / 50));
 
     let boardWidth = this.GRID_SIZE * this.cellSize;
 
