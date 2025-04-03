@@ -556,7 +556,7 @@ export default class GameScene extends Phaser.Scene {
     // Add visual feedback on press for each button
     [upButton, downButton, leftButton, rightButton].forEach((button) => {
       button.on("pointerdown", () => {
-        button.setFillStyle(0x00aa00, 0.7); // Darker green when pressed
+        button.setFillStyle(0x73f9a4, 0.9); // Darker green when pressed
       });
       button.on("pointerup", () => {
         button.setFillStyle(0x558eda, 0.5); // Back to normal
