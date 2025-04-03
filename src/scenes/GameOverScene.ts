@@ -30,16 +30,18 @@ export default class GameOverScene extends Phaser.Scene {
 
     // Calculate responsive font sizes
     const titleSize = this.isMobile
-      ? Math.min(64, Math.floor(width / 5))
+      ? Math.min(60, Math.floor(width / 5))
       : "64px";
 
-    const scoreSize = this.isMobile
-      ? Math.min(36, Math.floor(width / 20))
-      : "36px";
+    const scoreSize = 52;
+    // const scoreSize = this.isMobile
+    // ? Math.min(36, Math.floor(width / 20))
+    // : "36px";
 
-    const buttonSize = this.isMobile
-      ? Math.min(20, Math.floor(width / 25))
-      : "30px";
+    const buttonSize = 40;
+    // const buttonSize = this.isMobile
+    // ? Math.min(20, Math.floor(width / 25))
+    // : "30px";
 
     // Add game over title
     this.add
@@ -155,17 +157,20 @@ export default class GameOverScene extends Phaser.Scene {
       window.innerWidth < 800;
 
     // Calculate responsive font sizes again
-    const titleSize = this.isMobile
-      ? Math.min(32, Math.floor(width / 15))
-      : "48px";
+    const titleSize = 52;
+    // const titleSize = this.isMobile
+    //   ? Math.min(32, Math.floor(width / 15))
+    //   : "48px";
 
-    const scoreSize = this.isMobile
-      ? Math.min(24, Math.floor(width / 20))
-      : "36px";
+    const scoreSize = 42;
+    // const scoreSize = this.isMobile
+    //   ? Math.min(24, Math.floor(width / 20))
+    //   : "36px";
 
-    const buttonSize = this.isMobile
-      ? Math.min(20, Math.floor(width / 25))
-      : "30px";
+    const buttonSize = 40;
+    // const buttonSize = this.isMobile
+    //   ? Math.min(20, Math.floor(width / 25))
+    //   : "30px";
 
     // Recalculate button padding based on screen size
     const buttonPadding = this.isMobile ? { x: 3, y: 2 } : { x: 20, y: 10 };

@@ -27,7 +27,7 @@ export default class PauseScene extends Phaser.Scene {
     this.add
       .text(width / 2, height / 3, "GAME PAUSED", {
         fontFamily: "Arial",
-        fontSize: "56px",
+        fontSize: "52px",
         color: COLORS.NORMAL,
       })
       .setOrigin(0.5);
