@@ -141,9 +141,7 @@ export default class GameScene extends Phaser.Scene {
       .image(width * 0.5, boardY + boardHeight / 2, "game-background")
       .setDisplaySize(boardWidth, boardHeight);
 
-    // Create the controls container right after creating the game board
     this.setupSwipeArea();
-
     this.updateControlsVisibility();
 
     // Add a border
@@ -327,36 +325,107 @@ export default class GameScene extends Phaser.Scene {
       .setOrigin(0)
       .setInteractive();
 
-    // Swipe logic
+    // Swipe logic with improved handling to prevent screen jerking
     let startX = 0;
     let startY = 0;
+    let isProcessingSwipe = false;
+    const swipeThreshold = 50;
+
+    // On pointer down, just record the start position
     swipeArea.on("pointerdown", (pointer) => {
-      startX = pointer.x;
-      startY = pointer.y;
-
-      swipeArea.on("pointerup", (pointer) => {
-        const swipeX = pointer.x - startX;
-        const swipeY = pointer.y - startY;
-        const swipeThreshold = 50;
-
-        // Determine direction based on the stronger swipe component
-        if (Math.abs(swipeX) > Math.abs(swipeY)) {
-          // Horizontal swipe
-          if (swipeX > swipeThreshold) {
-            if (this.direction !== "LEFT") this.nextDirection = "RIGHT";
-          } else if (swipeX < -swipeThreshold) {
-            if (this.direction !== "RIGHT") this.nextDirection = "LEFT";
-          }
-        } else {
-          // Vertical swipe
-          if (swipeY > swipeThreshold) {
-            if (this.direction !== "UP") this.nextDirection = "DOWN";
-          } else if (swipeY < -swipeThreshold) {
-            if (this.direction !== "DOWN") this.nextDirection = "UP";
-          }
-        }
-      });
+      // Only process if we're not already processing a swipe
+      if (!isProcessingSwipe) {
+        startX = pointer.x;
+        startY = pointer.y;
+        isProcessingSwipe = false;
+      }
     });
+
+    // Track pointer move to detect swipes without waiting for pointer up
+    swipeArea.on("pointermove", (pointer) => {
+      // Only process if we have a valid start position and not already processed this swipe
+      if (startX !== 0 && startY !== 0 && !isProcessingSwipe) {
+        const currentX = pointer.x;
+        const currentY = pointer.y;
+
+        const swipeX = currentX - startX;
+        const swipeY = currentY - startY;
+
+        // Only process if the swipe is significant enough (exceed threshold)
+        if (
+          Math.abs(swipeX) > swipeThreshold ||
+          Math.abs(swipeY) > swipeThreshold
+        ) {
+          isProcessingSwipe = true;
+
+          // Determine swipe direction based on the stronger axis
+          if (Math.abs(swipeX) > Math.abs(swipeY)) {
+            // Horizontal swipe
+            if (swipeX > 0) {
+              if (this.direction !== "LEFT") this.nextDirection = "RIGHT";
+            } else {
+              if (this.direction !== "RIGHT") this.nextDirection = "LEFT";
+            }
+          } else {
+            // Vertical swipe
+            if (swipeY > 0) {
+              if (this.direction !== "UP") this.nextDirection = "DOWN";
+            } else {
+              if (this.direction !== "DOWN") this.nextDirection = "UP";
+            }
+          }
+
+          // Don't reset start coordinates here to prevent multiple swipe detections
+          // during the same touch movement
+        }
+      }
+    });
+
+    // On pointer up, reset the swipe tracking
+    swipeArea.on("pointerup", () => {
+      startX = 0;
+      startY = 0;
+      isProcessingSwipe = false;
+    });
+
+    // Also reset on pointer out to handle edge cases
+    swipeArea.on("pointerout", () => {
+      startX = 0;
+      startY = 0;
+      isProcessingSwipe = false;
+    });
+
+    // Add this to prevent default browser behavior that might cause jerking
+    this.input.on("pointermove", function (pointer) {
+      if (pointer.isDown) {
+        // Prevent default only when dragging
+        pointer.event.preventDefault();
+      }
+    });
+  }
+
+  // Add this method to your class to prevent default touch behavior on the canvas
+  private setupTouchPrevention(): void {
+    // Get the canvas element
+    const canvas = this.sys.game.canvas;
+
+    // Prevent default touchmove behavior to stop screen scrolling/bouncing
+    canvas.addEventListener(
+      "touchmove",
+      function (e) {
+        e.preventDefault();
+      },
+      { passive: false }
+    );
+
+    // Also prevent touchstart default behavior
+    canvas.addEventListener(
+      "touchstart",
+      function (e) {
+        e.preventDefault();
+      },
+      { passive: false }
+    );
   }
 
   private setupMobileButtons(): void {
@@ -373,8 +442,8 @@ export default class GameScene extends Phaser.Scene {
 
     // Create container at the bottom-right corner of the game board
     this.controlsContainer = this.add.container(
-      boardX + boardWidth - buttonSize * 1.5,
-      boardY + boardHeight - buttonSize * 1.5
+      boardX + boardWidth - buttonSize * 1.6,
+      boardY + boardHeight - buttonSize * 1.6
     );
 
     // Larger background circle
@@ -495,7 +564,7 @@ export default class GameScene extends Phaser.Scene {
     });
 
     // Make directional buttons more visible
-    this.controlsContainer.setAlpha(0.8); // Opacity
+    this.controlsContainer.setAlpha(0.6); // Opacity
   }
 
   private updateControlsVisibility(): void {
@@ -595,8 +664,8 @@ export default class GameScene extends Phaser.Scene {
         const padding = buttonSize * 0.2;
 
         this.controlsContainer.setPosition(
-          boardX + boardWidth - buttonSize * 1.5,
-          boardY + boardHeight - buttonSize * 1.5
+          boardX + boardWidth - buttonSize * 1.6,
+          boardY + boardHeight - buttonSize * 1.6
         );
 
         if (this.controlsContainer.length > 0) {
@@ -683,7 +752,7 @@ export default class GameScene extends Phaser.Scene {
           }
         }
         this.updateControlsVisibility();
-        this.controlsContainer.setAlpha(0.8); // Opacity
+        this.controlsContainer.setAlpha(0.6); // Opacity
       }
 
       this.updateSnakeGraphics();
@@ -714,7 +783,7 @@ export default class GameScene extends Phaser.Scene {
       );
 
       // Scale food emoji based on cell size
-      graphic.setFontSize(Math.max(12, this.cellSize * 1.0));
+      graphic.setFontSize(Math.max(16, this.cellSize * 1.0));
     });
   }
 
@@ -833,7 +902,7 @@ export default class GameScene extends Phaser.Scene {
         boardX + this.food.x * this.cellSize + this.cellSize / 2,
         boardY + this.food.y * this.cellSize + this.cellSize / 2,
         this.food.emoji,
-        { fontSize: Math.max(12, this.cellSize * 1.0) }
+        { fontSize: Math.max(16, this.cellSize * 1.0) }
       )
       .setOrigin(0.5);
 
