@@ -27,7 +27,7 @@ export default class PauseScene extends Phaser.Scene {
     this.add
       .text(width / 2, height / 3, "GAME PAUSED", {
         fontFamily: "Arial",
-        fontSize: "32px",
+        fontSize: "56px",
         color: COLORS.NORMAL,
       })
       .setOrigin(0.5);
@@ -36,9 +36,9 @@ export default class PauseScene extends Phaser.Scene {
     this.resumeButton = this.add
       .text(width / 2, height / 2, "Resume", {
         fontFamily: "Arial",
-        fontSize: "24px",
+        fontSize: "40px",
         color: "#ffffff",
-        backgroundColor: "#6b238d", // Start with hover state
+        backgroundColor: "#22c55e",
         padding: { x: 20, y: 10 },
       })
       .setOrigin(0.5)
@@ -48,13 +48,13 @@ export default class PauseScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true })
       .on("pointerover", () => {
         this.resumeButton.setStyle({ backgroundColor: "#6b238d" });
-        this.resumeButton.setColor("#FFBF00"); // Change text to gold on hover
+        //this.resumeButton.setColor("#FFBF00"); // Change text to gold on hover
         this.resumeButton.setScale(1.05);
       })
       .on("pointerout", () => {
         // Keep resume button always in hover state
-        this.resumeButton.setStyle({ backgroundColor: "#6b238d" });
-        this.resumeButton.setColor("#FFBF00");
+        this.resumeButton.setStyle({ backgroundColor: "#22c55e" });
+        //this.resumeButton.setColor("#FFBF00");
         this.resumeButton.setScale(1.05);
       })
       .on("pointerdown", () => {
@@ -62,13 +62,13 @@ export default class PauseScene extends Phaser.Scene {
       });
 
     // Set initial state of resume button as hovered
-    this.resumeButton.setColor("#FFBF00");
+    //this.resumeButton.setColor("#FFBF00");
 
     // Menu button
     this.menuButton = this.add
       .text(width / 2, height / 2 + 80, "Main Menu", {
         fontFamily: "Arial",
-        fontSize: "24px",
+        fontSize: "40px",
         color: "#ffffff",
         backgroundColor: "#22c55e",
         padding: { x: 20, y: 10 },
@@ -110,22 +110,22 @@ export default class PauseScene extends Phaser.Scene {
       // Up/Down to navigate between buttons
       this.input.keyboard.on("keydown-DOWN", () => {
         // Move focus to menu button
-        this.resumeButton.setStyle({ backgroundColor: "#22c55e" });
+        this.resumeButton.setStyle({ backgroundColor: "#6b238d" });
         this.resumeButton.setColor("#ffffff");
         this.resumeButton.setScale(1);
 
-        this.menuButton.setStyle({ backgroundColor: "#6b238d" });
+        this.menuButton.setStyle({ backgroundColor: "#22c55e" });
         this.menuButton.setScale(1.05);
       });
 
       this.input.keyboard.on("keydown-UP", () => {
         // Move focus back to resume button
         this.menuButton.setStyle({ backgroundColor: "#22c55e" });
-        this.menuButton.setScale(1);
+        this.menuButton.setScale(1.05);
 
         this.resumeButton.setStyle({ backgroundColor: "#6b238d" });
         this.resumeButton.setColor("#FFBF00");
-        this.resumeButton.setScale(1.05);
+        this.resumeButton.setScale(1);
       });
     }
 
@@ -133,7 +133,7 @@ export default class PauseScene extends Phaser.Scene {
     this.time.delayedCall(50, () => {
       if (this.resumeButton) {
         this.resumeButton.setStyle({ backgroundColor: "#6b238d" });
-        this.resumeButton.setColor("#FFBF00");
+        //this.resumeButton.setColor("#FFBF00");
         this.resumeButton.setScale(1.05);
       }
     });

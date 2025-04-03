@@ -30,11 +30,11 @@ export default class GameOverScene extends Phaser.Scene {
 
     // Calculate responsive font sizes
     const titleSize = this.isMobile
-      ? Math.min(32, Math.floor(width / 15))
-      : "48px";
+      ? Math.min(64, Math.floor(width / 5))
+      : "64px";
 
     const scoreSize = this.isMobile
-      ? Math.min(24, Math.floor(width / 20))
+      ? Math.min(36, Math.floor(width / 20))
       : "36px";
 
     const buttonSize = this.isMobile
@@ -168,7 +168,7 @@ export default class GameOverScene extends Phaser.Scene {
       : "30px";
 
     // Recalculate button padding based on screen size
-    const buttonPadding = this.isMobile ? { x: 15, y: 8 } : { x: 20, y: 10 };
+    const buttonPadding = this.isMobile ? { x: 3, y: 2 } : { x: 20, y: 10 };
 
     // Get and update title text
     const titleText = this.children.list.find(

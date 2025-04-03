@@ -14,9 +14,9 @@ export default class GameScene extends Phaser.Scene {
   private readonly CELL_SIZE = 20;
 
   // Positioning constants (percentages)
-  private readonly BOARD_Y_PERCENT = 0.2; // Board Y position as percentage of screen height
+  private readonly BOARD_Y_PERCENT = 0.25; // Board Y position as percentage of screen height
   private readonly TITLE_Y_PERCENT = 0.1; // Title Y position
-  private readonly UI_Y_PERCENT = 0.15; // UI elements Y position
+  private readonly UI_Y_PERCENT = 0.18; // UI elements Y position
 
   private cellSize = 20;
 
@@ -71,6 +71,7 @@ export default class GameScene extends Phaser.Scene {
   private foodGraphics: Phaser.GameObjects.Text[] = [];
   private speedDownBtn!: Phaser.GameObjects.Text;
   private speedUpBtn!: Phaser.GameObjects.Text;
+  private pauseBtn!: Phaser.GameObjects.Text;
 
   constructor() {
     super("GameScene");
@@ -164,28 +165,14 @@ export default class GameScene extends Phaser.Scene {
       )
       .setOrigin(0.5);
 
-    // Delay text aligned left
     const uiFontSize = Math.min(14, Math.floor(width / 80));
-
-    // Delay text aligned left
-    this.speedText = this.add
-      .text(boardX, height * this.UI_Y_PERCENT, `Delay: `, {
-        fontFamily: "Arial",
-        fontSize: `${uiFontSize}px`,
-        color: COLORS.NORMAL,
-        backgroundColor: COLORS.BUTTON_BG,
-        padding: { x: 10, y: 5 },
-      })
-      .setOrigin(0, 0.5);
-
-    const textWidth = this.speedText.width;
 
     // Speed down button
     this.speedDownBtn = this.add
       .text(
-        boardX + textWidth + width * 0.005, // Small gap after "Delay:"
+        boardX + width * 0.005, // Small gap after "Delay:"
         height * this.UI_Y_PERCENT,
-        "◀",
+        "▶",
         {
           fontFamily: "Arial",
           fontSize: `${uiFontSize}px`,
@@ -210,9 +197,9 @@ export default class GameScene extends Phaser.Scene {
     // Speed up button right next to speed down button
     this.speedUpBtn = this.add
       .text(
-        boardX + textWidth + this.speedDownBtn.width + width * 0.005, // Minimal gap after speed down button
+        boardX + this.speedDownBtn.width + width * 0.015, // Minimal gap after speed down button
         height * this.UI_Y_PERCENT,
-        "▶",
+        "◀",
         {
           fontFamily: "Arial",
           fontSize: `${uiFontSize}px`,
@@ -235,7 +222,7 @@ export default class GameScene extends Phaser.Scene {
       });
 
     this.scoreText = this.add
-      .text(width * 0.5, height * this.UI_Y_PERCENT, `Score: ${this.score}`, {
+      .text(width * 0.5, height * this.UI_Y_PERCENT, `${this.score}`, {
         fontFamily: "Arial",
         fontSize: `${uiFontSize}px`,
         color: COLORS.NORMAL,
@@ -246,7 +233,7 @@ export default class GameScene extends Phaser.Scene {
       .setName("scoreText");
 
     // Set up pause button text (right aligned) - match font size with other UI elements
-    const pauseButton = this.add
+    this.pauseBtn = this.add
       .text(boardX + boardWidth, height * this.UI_Y_PERCENT, "Pause", {
         fontFamily: "Arial",
         fontSize: `${uiFontSize}px`,
@@ -258,15 +245,15 @@ export default class GameScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true })
       .on("pointerdown", () => {
         this.togglePause();
-        pauseButton.setBackgroundColor("0x007700"); // Darker green when pressed
+        this.pauseBtn.setBackgroundColor("0x007700"); // Darker green when pressed
       })
       .on("pointerup", () => {
-        pauseButton.setBackgroundColor(COLORS.BUTTON_BG); // Back to normal
+        this.pauseBtn.setBackgroundColor(COLORS.BUTTON_BG); // Back to normal
       })
       .on("pointerout", () => {
-        pauseButton.setBackgroundColor(COLORS.BUTTON_BG); // Back to normal if pointer moves out
+        this.pauseBtn.setBackgroundColor(COLORS.BUTTON_BG); // Back to normal if pointer moves out
       })
-      .setName("pauseButton");
+      .setName("pauseBtn");
 
     // Generate initial food
     if (this.gameType === "classic") {
@@ -385,7 +372,8 @@ export default class GameScene extends Phaser.Scene {
 
     // Use 18% of board width for button size instead of 10%
     const buttonSize = boardWidth * 0.18;
-    const padding = buttonSize * 0.2;
+    const standardPadding = buttonSize * 0.2;
+    const padding = standardPadding + 15;
 
     // Create container at the bottom-right corner of the game board
     this.controlsContainer = this.add.container(
@@ -465,14 +453,21 @@ export default class GameScene extends Phaser.Scene {
 
     // RIGHT button
     const rightButton = this.add
-      .rectangle(buttonSize + padding, 0, buttonSize, buttonSize, 0x00ff00, 0.5)
+      .rectangle(
+        buttonSize + padding + 20,
+        0,
+        buttonSize,
+        buttonSize,
+        0x00ff00,
+        0.5
+      )
       .setInteractive({ useHandCursor: true })
       .on("pointerdown", () => {
         if (this.direction !== "LEFT") this.nextDirection = "RIGHT";
       });
 
     const rightText = this.add
-      .text(buttonSize + padding, 0, "→", {
+      .text(buttonSize + padding + 20, 0, "→", {
         fontSize: buttonSize * 0.7,
         color: "#FFFFFF",
       })
@@ -504,7 +499,7 @@ export default class GameScene extends Phaser.Scene {
     });
 
     // Make directional buttons more visible
-    this.controlsContainer.setAlpha(0.9);
+    this.controlsContainer.setAlpha(0.8); // Opacity
   }
 
   private updateControlsVisibility(): void {
@@ -533,8 +528,8 @@ export default class GameScene extends Phaser.Scene {
 
     // Calculate responsive grid size
     this.cellSize = Math.floor(Math.min(width / 45, height / 45) * 1.0);
+    let speedPauseFontSize = Math.max(12, Math.floor(width / 50));
 
-    // Calculate board width - use 95% of screen width for mobile
     let boardWidth = this.GRID_SIZE * this.cellSize;
 
     const isMobile =
@@ -550,12 +545,11 @@ export default class GameScene extends Phaser.Scene {
       boardWidth = targetBoardWidth;
     }
 
+    this.isMobile = isMobile;
+
     const boardHeight = this.GRID_SIZE * this.cellSize;
     const boardX = (width - boardWidth) / 2;
     const boardY = height * this.BOARD_Y_PERCENT;
-
-    // Update isMobile property
-    this.isMobile = isMobile;
 
     // Update board position and size
     if (this.gameBoard) {
@@ -563,66 +557,53 @@ export default class GameScene extends Phaser.Scene {
       this.gameBoard.setDisplaySize(boardWidth, boardHeight);
     }
 
-    console.log("RESIZE: gameBoard x y:", this.gameBoard.x, this.gameBoard.y);
-
     // Resize UI elements with percentage-based positioning
     if (this.titleText) {
-      console.log(
-        "RESIZE: titleText: width height:",
-        this.titleText.height,
-        this.titleText.width
-      );
-
       this.titleText.setPosition(width * 0.5, height * this.TITLE_Y_PERCENT);
-      this.titleText.setFontSize(Math.max(24, Math.floor(width / 40)));
+      this.titleText.setFontSize(1.8 * speedPauseFontSize);
     }
 
-    if (this.scoreText) {
-      this.scoreText.setPosition(width * 0.5, height * this.UI_Y_PERCENT);
-      this.scoreText.setFontSize(Math.max(12, Math.floor(width / 100)));
-    }
+    if (this.speedDownBtn) {
+      this.speedDownBtn.setPosition(
+        boardX + width * 0.005,
+        height * this.UI_Y_PERCENT
+      );
+      this.speedDownBtn.setFontSize(speedPauseFontSize);
 
-    if (this.speedText) {
-      this.speedText.setPosition(boardX, height * this.UI_Y_PERCENT);
-      this.speedText.setFontSize(Math.max(12, Math.floor(width / 100)));
-      const textWidth = this.speedText.width;
-
-      if (this.speedDownBtn) {
-        this.speedDownBtn.setPosition(
-          boardX + textWidth + width * 0.005,
+      if (this.speedUpBtn) {
+        this.speedUpBtn.setPosition(
+          boardX + this.speedDownBtn.width + width * 0.015,
           height * this.UI_Y_PERCENT
         );
-        this.speedDownBtn.setFontSize(Math.max(12, Math.floor(width / 100)));
-
-        if (this.speedUpBtn) {
-          this.speedUpBtn.setPosition(
-            boardX + textWidth + this.speedDownBtn.width + width * 0.005,
-            height * this.UI_Y_PERCENT
-          );
-          this.speedUpBtn.setFontSize(Math.max(12, Math.floor(width / 100)));
-        }
+        this.speedUpBtn.setFontSize(speedPauseFontSize);
       }
 
       if (this.scoreText) {
         this.scoreText.setPosition(width * 0.5, height * this.UI_Y_PERCENT);
-        this.scoreText.setFontSize(Math.max(12, Math.floor(width / 100)));
+        this.scoreText.setFontSize(speedPauseFontSize);
       }
 
-      // Update mobile controls container position if it exists
+      if (this.pauseBtn) {
+        this.pauseBtn.setPosition(
+          boardX + boardWidth,
+          height * this.UI_Y_PERCENT
+        );
+        this.pauseBtn.setFontSize(speedPauseFontSize);
+      }
+
+      // MOBILE Arrow Keys
       if (this.controlsContainer) {
         //if (this.isMobile && this.controlsContainer) {
         const buttonSize = boardWidth * 0.18;
         const padding = buttonSize * 0.2;
 
-        // Update container position
         this.controlsContainer.setPosition(
           boardX + boardWidth - buttonSize * 1.5,
           boardY + boardHeight - buttonSize * 1.5
         );
 
-        // Update the control elements if they exist
         if (this.controlsContainer.length > 0) {
-          // Update background circle
+          // Background circle
           const controlsBg = this.controlsContainer.getAt(
             0
           ) as Phaser.GameObjects.Arc;
@@ -703,30 +684,13 @@ export default class GameScene extends Phaser.Scene {
             }
           }
         }
-        // Make controls more visible
-        this.controlsContainer.setAlpha(0.9); // Increased opacity
+        this.updateControlsVisibility();
+        this.controlsContainer.setAlpha(0.8); // Opacity
       }
-      // Update snake and food positions
-      if (this.snake && this.snake.length > 0) {
-        this.updateSnakeGraphics();
-        this.updateFoodGraphics();
-      }
+
+      this.updateSnakeGraphics();
+      this.updateFoodGraphics();
     }
-
-    // Update pause button if it exists
-    const pauseButton = this.children.getByName(
-      "pauseButton"
-    ) as Phaser.GameObjects.Text;
-    if (pauseButton) {
-      pauseButton.setPosition(boardX + boardWidth, height * this.UI_Y_PERCENT);
-      pauseButton.setFontSize(Math.max(8, Math.floor(width / 100)));
-    }
-
-    // Update snake and food positions
-    this.updateSnakeGraphics();
-
-    // Update food graphics positions
-    this.updateFoodGraphics();
   }
 
   private updateFoodGraphics(): void {
@@ -1088,7 +1052,7 @@ export default class GameScene extends Phaser.Scene {
         this.score++;
         // Update score text - ensure it exists before updating
         if (this.scoreText) {
-          this.scoreText.setText(`Score: ${this.score}`);
+          this.scoreText.setText(`${this.score}`);
         }
 
         // Remove eaten food from arrays and graphics
