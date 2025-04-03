@@ -114,12 +114,14 @@ export default class GameScene extends Phaser.Scene {
     // Reset the game state
     this.snake = [{ x: 12, y: 12 }]; // Initial position
     this.score = 0;
-    this.speed = this.DEFAULT_SPEED;
     this.bounceEatenFood = 0;
     this.foodItems = [];
 
-    // Get the selected game type from registry
-    this.gameType = this.registry.get("gameType") || "classic";
+    this.speed = this.registry.get("lastSpeed") || this.DEFAULT_SPEED;
+    this.gameType =
+      this.registry.get("lastGameType") ||
+      this.registry.get("gameType") ||
+      "classic";
 
     // Initial direction is randomly chosen
     const directions = ["UP", "DOWN", "LEFT", "RIGHT"];
@@ -141,15 +143,17 @@ export default class GameScene extends Phaser.Scene {
       .image(width * 0.5, boardY + boardHeight / 2, "game-background")
       .setDisplaySize(boardWidth, boardHeight);
 
-    this.setupSwipeArea();
-    this.updateControlsVisibility();
-
     // Add a border
     // const border = this.add
     //   .rectangle(width * 0.5, boardY + boardHeight / 2, boardWidth, boardHeight)
     //   .setStrokeStyle(4, 0x1f2937)
     //   .setAlpha(1)
     //   .setName("border");
+
+    this.setupSwipeArea();
+    this.setupTouchPrevention();
+
+    this.updateControlsVisibility();
 
     // Add title
     this.titleText = this.add
@@ -317,94 +321,7 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
-  //========== 3. Set up mobile controls
-  private setupSwipeArea(): void {
-    // Create a larger swipe area over the entire game
-    const swipeArea = this.add
-      .rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0)
-      .setOrigin(0)
-      .setInteractive();
-
-    // Swipe logic with improved handling to prevent screen jerking
-    let startX = 0;
-    let startY = 0;
-    let isProcessingSwipe = false;
-    const swipeThreshold = 50;
-
-    // On pointer down, just record the start position
-    swipeArea.on("pointerdown", (pointer) => {
-      // Only process if we're not already processing a swipe
-      if (!isProcessingSwipe) {
-        startX = pointer.x;
-        startY = pointer.y;
-        isProcessingSwipe = false;
-      }
-    });
-
-    // Track pointer move to detect swipes without waiting for pointer up
-    swipeArea.on("pointermove", (pointer) => {
-      // Only process if we have a valid start position and not already processed this swipe
-      if (startX !== 0 && startY !== 0 && !isProcessingSwipe) {
-        const currentX = pointer.x;
-        const currentY = pointer.y;
-
-        const swipeX = currentX - startX;
-        const swipeY = currentY - startY;
-
-        // Only process if the swipe is significant enough (exceed threshold)
-        if (
-          Math.abs(swipeX) > swipeThreshold ||
-          Math.abs(swipeY) > swipeThreshold
-        ) {
-          isProcessingSwipe = true;
-
-          // Determine swipe direction based on the stronger axis
-          if (Math.abs(swipeX) > Math.abs(swipeY)) {
-            // Horizontal swipe
-            if (swipeX > 0) {
-              if (this.direction !== "LEFT") this.nextDirection = "RIGHT";
-            } else {
-              if (this.direction !== "RIGHT") this.nextDirection = "LEFT";
-            }
-          } else {
-            // Vertical swipe
-            if (swipeY > 0) {
-              if (this.direction !== "UP") this.nextDirection = "DOWN";
-            } else {
-              if (this.direction !== "DOWN") this.nextDirection = "UP";
-            }
-          }
-
-          // Don't reset start coordinates here to prevent multiple swipe detections
-          // during the same touch movement
-        }
-      }
-    });
-
-    // On pointer up, reset the swipe tracking
-    swipeArea.on("pointerup", () => {
-      startX = 0;
-      startY = 0;
-      isProcessingSwipe = false;
-    });
-
-    // Also reset on pointer out to handle edge cases
-    swipeArea.on("pointerout", () => {
-      startX = 0;
-      startY = 0;
-      isProcessingSwipe = false;
-    });
-
-    // Add this to prevent default browser behavior that might cause jerking
-    this.input.on("pointermove", function (pointer) {
-      if (pointer.isDown) {
-        // Prevent default only when dragging
-        pointer.event.preventDefault();
-      }
-    });
-  }
-
-  // Add this method to your class to prevent default touch behavior on the canvas
+  //========== SWIPE processing
   private setupTouchPrevention(): void {
     // Get the canvas element
     const canvas = this.sys.game.canvas;
@@ -428,6 +345,178 @@ export default class GameScene extends Phaser.Scene {
     );
   }
 
+  private setupSwipeArea(): void {
+    // Create a swipe area over the entire game
+    const swipeArea = this.add
+      .rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0)
+      .setOrigin(0)
+      .setInteractive();
+
+    // Improved swipe logic with better thresholds and feedback
+    let startX = 0;
+    let startY = 0;
+    let isProcessingSwipe = false;
+
+    // Adaptive swipe threshold based on screen size
+    const getSwipeThreshold = () => {
+      // Smaller threshold for smaller screens, larger for bigger screens
+      const baseThreshold =
+        Math.min(this.scale.width, this.scale.height) * 0.05;
+      return Math.max(20, Math.min(baseThreshold, 50)); // Between 20 and 50 pixels
+    };
+
+    // Visual feedback for swipe (optional)
+    const swipeFeedback = this.add.graphics();
+    swipeFeedback.setVisible(false);
+
+    // Show swipe direction feedback
+    const showDirectionFeedback = (direction) => {
+      swipeFeedback.clear();
+
+      if (!this.isMobile) return; // Only show feedback on mobile
+
+      const { width, height } = this.scale;
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const size = Math.min(width, height) * 0.1; // 10% of screen size
+
+      swipeFeedback.fillStyle(0xffffff, 0.2);
+
+      // Draw direction indicator
+      if (direction === "UP") {
+        swipeFeedback.fillTriangle(
+          centerX,
+          centerY - size,
+          centerX - size / 2,
+          centerY,
+          centerX + size / 2,
+          centerY
+        );
+      } else if (direction === "DOWN") {
+        swipeFeedback.fillTriangle(
+          centerX,
+          centerY + size,
+          centerX - size / 2,
+          centerY,
+          centerX + size / 2,
+          centerY
+        );
+      } else if (direction === "LEFT") {
+        swipeFeedback.fillTriangle(
+          centerX - size,
+          centerY,
+          centerX,
+          centerY - size / 2,
+          centerX,
+          centerY + size / 2
+        );
+      } else if (direction === "RIGHT") {
+        swipeFeedback.fillTriangle(
+          centerX + size,
+          centerY,
+          centerX,
+          centerY - size / 2,
+          centerX,
+          centerY + size / 2
+        );
+      }
+
+      swipeFeedback.setVisible(true);
+
+      // Hide feedback after a short delay
+      this.time.delayedCall(150, () => {
+        swipeFeedback.setVisible(false);
+      });
+    };
+
+    // On pointer down, record the start position
+    swipeArea.on("pointerdown", (pointer) => {
+      if (!isProcessingSwipe) {
+        startX = pointer.x;
+        startY = pointer.y;
+        isProcessingSwipe = false;
+      }
+    });
+
+    // Track pointer move for early swipe detection
+    swipeArea.on("pointermove", (pointer) => {
+      // Only process if we have valid start position and not already processed
+      if (startX !== 0 && startY !== 0 && !isProcessingSwipe) {
+        const currentX = pointer.x;
+        const currentY = pointer.y;
+
+        const swipeX = currentX - startX;
+        const swipeY = currentY - startY;
+        const swipeThreshold = getSwipeThreshold();
+
+        // Calculate distance of swipe to detect shorter swipes more accurately
+        const swipeDistance = Math.sqrt(swipeX * swipeX + swipeY * swipeY);
+
+        // Process if swipe is significant enough
+        if (swipeDistance > swipeThreshold) {
+          isProcessingSwipe = true;
+
+          // Calculate swipe angle for more precise direction detection
+          const swipeAngle = (Math.atan2(swipeY, swipeX) * 180) / Math.PI;
+
+          // Determine swipe direction based on angle
+          if (swipeAngle > -45 && swipeAngle <= 45) {
+            // Right swipe
+            if (this.direction !== "LEFT") {
+              this.nextDirection = "RIGHT";
+              showDirectionFeedback("RIGHT");
+            }
+          } else if (swipeAngle > 45 && swipeAngle <= 135) {
+            // Down swipe
+            if (this.direction !== "UP") {
+              this.nextDirection = "DOWN";
+              showDirectionFeedback("DOWN");
+            }
+          } else if (
+            (swipeAngle > 135 && swipeAngle <= 180) ||
+            (swipeAngle >= -180 && swipeAngle <= -135)
+          ) {
+            // Left swipe
+            if (this.direction !== "RIGHT") {
+              this.nextDirection = "LEFT";
+              showDirectionFeedback("LEFT");
+            }
+          } else if (swipeAngle > -135 && swipeAngle <= -45) {
+            // Up swipe
+            if (this.direction !== "DOWN") {
+              this.nextDirection = "UP";
+              showDirectionFeedback("UP");
+            }
+          }
+        }
+      }
+    });
+
+    // Reset on pointer up
+    swipeArea.on("pointerup", () => {
+      startX = 0;
+      startY = 0;
+      isProcessingSwipe = false;
+    });
+
+    // Reset on pointer out
+    swipeArea.on("pointerout", () => {
+      startX = 0;
+      startY = 0;
+      isProcessingSwipe = false;
+    });
+
+    // Prevent default behavior to avoid screen jerking
+    this.input.on("pointermove", (pointer) => {
+      if (pointer.isDown) {
+        pointer.event.preventDefault();
+      }
+    });
+
+    // Set up touch prevention for smoother mobile experience
+    this.setupTouchPrevention();
+  }
+
   private setupMobileButtons(): void {
     const { width, height } = this.scale;
     const boardWidth = this.GRID_SIZE * this.cellSize;
@@ -442,8 +531,8 @@ export default class GameScene extends Phaser.Scene {
 
     // Create container at the bottom-right corner of the game board
     this.controlsContainer = this.add.container(
-      (boardX + boardWidth - buttonSize * 1.6) * 0.9,
-      (boardY + boardHeight - buttonSize * 1.6) * 0.9
+      (boardX + boardWidth - buttonSize * 1.6) * 0.95,
+      (boardY + boardHeight - buttonSize * 1.6) * 0.95
     );
 
     // Larger background circle
@@ -1179,6 +1268,10 @@ export default class GameScene extends Phaser.Scene {
       this.moveTimer.remove();
     }
     this.scale.off("resize", this.resize, this);
+
+    // Save current game settings to registry for replay
+    this.registry.set("lastSpeed", this.speed);
+    this.registry.set("lastGameType", this.gameType);
 
     // Create explosion effect at collision point
     this.createExplosionEffect(head.x, head.y);
