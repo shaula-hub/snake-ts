@@ -165,12 +165,34 @@ export default class GameScene extends Phaser.Scene {
       )
       .setOrigin(0.5);
 
-    const uiFontSize = Math.min(14, Math.floor(width / 80));
+    const uiFontSize = Math.min(24, Math.floor(width / 40));
+
+    // Speed up button right next to speed down button
+    this.speedUpBtn = this.add
+      .text(boardX + width * 0.005, height * this.UI_Y_PERCENT, "◀", {
+        fontFamily: "Arial",
+        fontSize: `${uiFontSize}px`,
+        color: COLORS.NORMAL,
+        backgroundColor: COLORS.BUTTON_BG,
+        padding: { x: 10, y: 5 },
+      })
+      .setOrigin(0, 0.5)
+      .setInteractive({ useHandCursor: true })
+      .on("pointerdown", () => {
+        this.changeSpeed(+20);
+        this.speedUpBtn.setBackgroundColor("0x007700"); // Darker green when pressed
+      })
+      .on("pointerup", () => {
+        this.speedUpBtn.setBackgroundColor(COLORS.BUTTON_BG); // Back to normal
+      })
+      .on("pointerout", () => {
+        this.speedUpBtn.setBackgroundColor(COLORS.BUTTON_BG); // Back to normal if pointer moves out
+      });
 
     // Speed down button
     this.speedDownBtn = this.add
       .text(
-        boardX + this.speedDownBtn.width + width * 0.015,
+        boardX + this.speedUpBtn.width + width * 0.015,
         // boardX + width * 0.005, // Small gap after "Delay:"
         height * this.UI_Y_PERCENT,
         "▶",
@@ -193,28 +215,6 @@ export default class GameScene extends Phaser.Scene {
       })
       .on("pointerout", () => {
         this.speedDownBtn.setBackgroundColor(COLORS.BUTTON_BG); // Back to normal if pointer moves out
-      });
-
-    // Speed up button right next to speed down button
-    this.speedUpBtn = this.add
-      .text(boardX + width * 0.005, height * this.UI_Y_PERCENT, "◀", {
-        fontFamily: "Arial",
-        fontSize: `${uiFontSize}px`,
-        color: COLORS.NORMAL,
-        backgroundColor: COLORS.BUTTON_BG,
-        padding: { x: 10, y: 5 },
-      })
-      .setOrigin(0, 0.5)
-      .setInteractive({ useHandCursor: true })
-      .on("pointerdown", () => {
-        this.changeSpeed(+20);
-        this.speedUpBtn.setBackgroundColor("0x007700"); // Darker green when pressed
-      })
-      .on("pointerup", () => {
-        this.speedUpBtn.setBackgroundColor(COLORS.BUTTON_BG); // Back to normal
-      })
-      .on("pointerout", () => {
-        this.speedUpBtn.setBackgroundColor(COLORS.BUTTON_BG); // Back to normal if pointer moves out
       });
 
     this.scoreText = this.add

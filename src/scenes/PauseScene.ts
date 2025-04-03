@@ -34,7 +34,7 @@ export default class PauseScene extends Phaser.Scene {
 
     // Resume button
     this.resumeButton = this.add
-      .text(width / 2, height * 0.4, "Resume", {
+      .text(width / 2, height * 0.47, "Resume", {
         //.text(width / 2, height / 2, "Resume", {
         fontFamily: "Arial",
         fontSize: "40px",
