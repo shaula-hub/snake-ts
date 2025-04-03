@@ -91,7 +91,7 @@ export default class MainMenuScene extends Phaser.Scene {
 
     // Start button
     this.startButton = this.add
-      .text(width / 2, height * 0.7, "Start Game", {
+      .text(width / 2, height * 0.55, "Start Game", {
         fontFamily: "Arial",
         fontSize: "36px",
         color: COLORS.WHITE,
