@@ -368,7 +368,7 @@ export default class GameScene extends Phaser.Scene {
             }
           } else {
             // Vertical swipe
-            if (swipeY < 0) {
+            if (swipeY > 0) {
               if (this.direction !== "UP") this.nextDirection = "DOWN";
             } else {
               if (this.direction !== "DOWN") this.nextDirection = "UP";
@@ -593,7 +593,7 @@ export default class GameScene extends Phaser.Scene {
 
     // Calculate responsive grid size
     this.cellSize = Math.floor(Math.min(width / 45, height / 45) * 1.0);
-    let speedPauseFontSize = Math.max(36, Math.floor(width / 50));
+    let speedPauseFontSize = Math.max(32, Math.floor(width / 50));
 
     let boardWidth = this.GRID_SIZE * this.cellSize;
 
