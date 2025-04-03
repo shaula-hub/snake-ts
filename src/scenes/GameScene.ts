@@ -193,7 +193,7 @@ export default class GameScene extends Phaser.Scene {
     this.speedDownBtn = this.add
       .text(
         boardX + this.speedUpBtn.width + width * 0.015,
-        // boardX + width * 0.005, // Small gap after "Delay:"
+        //boardX + width * 0.005, // Small gap after "Delay:"
         height * this.UI_Y_PERCENT,
         "▶",
         {
@@ -559,19 +559,20 @@ export default class GameScene extends Phaser.Scene {
       this.titleText.setFontSize(1.8 * speedPauseFontSize);
     }
 
-    if (this.speedDownBtn) {
-      this.speedDownBtn.setPosition(
+    if (this.speedUpBtn) {
+      this.speedUpBtn.setPosition(
         boardX + width * 0.005,
         height * this.UI_Y_PERCENT
       );
-      this.speedDownBtn.setFontSize(speedPauseFontSize);
+      this.speedUpBtn.setFontSize(speedPauseFontSize);
 
-      if (this.speedUpBtn) {
-        this.speedUpBtn.setPosition(
-          boardX + this.speedDownBtn.width + width * 0.015,
+      if (this.speedDownBtn) {
+        this.speedDownBtn.setPosition(
+          //boardX + width * 0.005,
+          boardX + this.speedUpBtn.width + width * 0.015,
           height * this.UI_Y_PERCENT
         );
-        this.speedUpBtn.setFontSize(speedPauseFontSize);
+        this.speedDownBtn.setFontSize(speedPauseFontSize);
       }
 
       if (this.scoreText) {

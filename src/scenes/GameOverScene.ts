@@ -30,18 +30,18 @@ export default class GameOverScene extends Phaser.Scene {
 
     // Calculate responsive font sizes
     const titleSize = this.isMobile
-      ? Math.min(60, Math.floor(width / 5))
+      ? Math.min(48, Math.floor(width / 5))
       : "64px";
 
-    const scoreSize = 52;
-    // const scoreSize = this.isMobile
-    // ? Math.min(36, Math.floor(width / 20))
-    // : "36px";
+    //const scoreSize = 52;
+    const scoreSize = this.isMobile
+      ? Math.min(36, Math.floor(width / 20))
+      : "48px";
 
-    const buttonSize = 40;
-    // const buttonSize = this.isMobile
-    // ? Math.min(20, Math.floor(width / 25))
-    // : "30px";
+    // const buttonSize = 40;
+    const buttonSize = this.isMobile
+      ? Math.min(20, Math.floor(width / 25))
+      : "30px";
 
     // Add game over title
     this.add
@@ -54,7 +54,7 @@ export default class GameOverScene extends Phaser.Scene {
 
     // Add score text
     this.add
-      .text(width / 2, height * 0.4, `Your final score: ${this.score}`, {
+      .text(width / 2, height * 0.42, `Your final score: ${this.score}`, {
         fontFamily: "Arial",
         fontSize: scoreSize,
         color: COLORS.WHITE,
@@ -66,7 +66,7 @@ export default class GameOverScene extends Phaser.Scene {
 
     // Play again button
     this.playAgainButton = this.add
-      .text(width / 2, height * 0.5, "Play Again", {
+      .text(width / 2, height * 0.54, "Play Again", {
         fontFamily: "Arial",
         fontSize: buttonSize,
         color: COLORS.WHITE,
@@ -88,7 +88,7 @@ export default class GameOverScene extends Phaser.Scene {
 
     // Settings button
     this.settingsButton = this.add
-      .text(width / 2, height * 0.6, "Settings", {
+      .text(width / 2, height * 0.66, "Settings", {
         fontFamily: "Arial",
         fontSize: buttonSize,
         color: COLORS.WHITE,
@@ -183,7 +183,7 @@ export default class GameOverScene extends Phaser.Scene {
     ) as Phaser.GameObjects.Text;
 
     if (titleText) {
-      titleText.setPosition(width / 2, height / 25);
+      titleText.setPosition(width / 2, height * 0.3);
       titleText.setFontSize(titleSize);
     }
 
@@ -195,20 +195,20 @@ export default class GameOverScene extends Phaser.Scene {
     ) as Phaser.GameObjects.Text;
 
     if (scoreText) {
-      scoreText.setPosition(width / 2, height * 0.38);
+      scoreText.setPosition(width / 2, height * 0.42);
       scoreText.setFontSize(scoreSize);
     }
 
     // Update Play Again button
     if (this.playAgainButton) {
-      this.playAgainButton.setPosition(width / 2, height * 0.5);
+      this.playAgainButton.setPosition(width / 2, height * 0.54);
       this.playAgainButton.setFontSize(buttonSize);
       this.playAgainButton.setPadding(buttonPadding);
     }
 
     // Update Settings button
     if (this.settingsButton) {
-      this.settingsButton.setPosition(width / 2, height * 0.73);
+      this.settingsButton.setPosition(width / 2, height * 0.66);
       this.settingsButton.setFontSize(buttonSize);
       this.settingsButton.setPadding(buttonPadding);
     }
