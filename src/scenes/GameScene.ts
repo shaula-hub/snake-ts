@@ -368,7 +368,7 @@ export default class GameScene extends Phaser.Scene {
             }
           } else {
             // Vertical swipe
-            if (swipeY > 0) {
+            if (swipeY < 0) {
               if (this.direction !== "UP") this.nextDirection = "DOWN";
             } else {
               if (this.direction !== "DOWN") this.nextDirection = "UP";
@@ -696,7 +696,7 @@ export default class GameScene extends Phaser.Scene {
             if (upText) {
               // Make text larger
               upText.setFontSize(buttonSize * 1.2);
-              upText.setPosition(0, -buttonSize - padding - 16);
+              upText.setPosition(0, -buttonSize - padding - 10);
             }
 
             // DOWN button
@@ -713,7 +713,7 @@ export default class GameScene extends Phaser.Scene {
             ) as Phaser.GameObjects.Text;
             if (downText) {
               downText.setFontSize(buttonSize * 1.2);
-              downText.setPosition(0, buttonSize + padding - 16);
+              downText.setPosition(0, buttonSize + padding - 10);
             }
 
             // LEFT button
